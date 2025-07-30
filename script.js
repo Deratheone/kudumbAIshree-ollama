@@ -20,6 +20,8 @@ class KudumbAIshree {
         this.pauseBtn = document.getElementById('pauseChat');
         this.resetBtn = document.getElementById('resetChat');
         this.clearLogBtn = document.getElementById('clearLog');
+        this.closeLogBtn = document.getElementById('closeLog');
+        this.toggleLogBtn = document.getElementById('toggleLog');
         
         // Speech bubbles
         this.speechBubbles = {
@@ -31,6 +33,7 @@ class KudumbAIshree {
         
         // Conversation log
         this.conversationLog = document.getElementById('conversationLog');
+        this.conversationLogContent = document.getElementById('conversationLogContent');
         
         // Character seats
         this.characterSeats = document.querySelectorAll('.character-seat');
@@ -42,6 +45,8 @@ class KudumbAIshree {
         this.pauseBtn.addEventListener('click', () => this.pauseChat());
         this.resetBtn.addEventListener('click', () => this.resetChat());
         this.clearLogBtn.addEventListener('click', () => this.clearConversationLog());
+        this.closeLogBtn.addEventListener('click', () => this.hideConversationLog());
+        this.toggleLogBtn.addEventListener('click', () => this.toggleConversationLog());
         
         // Character seat click events
         this.characterSeats.forEach(seat => {
@@ -194,10 +199,10 @@ class KudumbAIshree {
             <span class="message">${message}</span>
         `;
         
-        this.conversationLog.appendChild(logEntry);
+        this.conversationLogContent.appendChild(logEntry);
         
         // Auto-scroll to bottom
-        this.conversationLog.scrollTop = this.conversationLog.scrollHeight;
+        this.conversationLogContent.scrollTop = this.conversationLogContent.scrollHeight;
         
         // Add to history
         this.conversationHistory.push({
@@ -208,7 +213,28 @@ class KudumbAIshree {
     }
 
     clearConversationLog() {
-        this.conversationLog.innerHTML = '';
+        this.conversationLogContent.innerHTML = '';
+    }
+
+    toggleConversationLog() {
+        const isVisible = this.conversationLog.classList.contains('show');
+        if (isVisible) {
+            this.hideConversationLog();
+        } else {
+            this.showConversationLog();
+        }
+    }
+
+    showConversationLog() {
+        this.conversationLog.classList.add('show');
+        this.toggleLogBtn.querySelector('.toggle-text').textContent = 'Hide Log';
+        this.toggleLogBtn.style.opacity = '0.7';
+    }
+
+    hideConversationLog() {
+        this.conversationLog.classList.remove('show');
+        this.toggleLogBtn.querySelector('.toggle-text').textContent = 'Show Log';
+        this.toggleLogBtn.style.opacity = '1';
     }
 
     getCharacterDisplayName(character) {

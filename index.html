@@ -114,16 +114,28 @@
                     </div>
                 </div>
 
+                <!-- Conversation Log Toggle Button -->
+                <button id="toggleLog" class="log-toggle-btn">
+                    <i class="fas fa-comments"></i>
+                    <span class="toggle-text">Show Log</span>
+                </button>
+
                 <!-- Conversation Log -->
-                <div class="conversation-log">
+                <div class="conversation-log" id="conversationLog">
                     <div class="log-header">
                         <h3><i class="fas fa-comments"></i> Conversation Log</h3>
-                        <button id="clearLog" class="btn btn-small">
-                            <i class="fas fa-trash"></i>
-                            Clear
-                        </button>
+                        <div class="log-controls">
+                            <button id="clearLog" class="btn btn-small">
+                                <i class="fas fa-trash"></i>
+                                Clear
+                            </button>
+                            <button id="closeLog" class="btn btn-small">
+                                <i class="fas fa-times"></i>
+                                Close
+                            </button>
+                        </div>
                     </div>
-                    <div class="log-content" id="conversationLog">
+                    <div class="log-content" id="conversationLogContent">
                         <div class="log-entry">
                             <span class="timestamp">10:30 AM</span>
                             <span class="speaker">Retired Teacher:</span>
