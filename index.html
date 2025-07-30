@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KudumbAIshree - Kerala Sit-out Chat Experience</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">
+                    <i class="fas fa-home"></i>
+                    KudumbAIshree
+                </h1>
+                <p class="subtitle">Kerala Sit-out Chat Experience</p>
+            </div>
+            <div class="controls">
+                <button id="startChat" class="btn btn-primary">
+                    <i class="fas fa-play"></i>
+                    Start Chat
+                </button>
+                <button id="pauseChat" class="btn btn-secondary" disabled>
+                    <i class="fas fa-pause"></i>
+                    Pause
+                </button>
+                <button id="resetChat" class="btn btn-secondary">
+                    <i class="fas fa-redo"></i>
+                    Reset
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Chat Scene -->
+        <main class="chat-scene">
+            <div class="scene-container">
+                <!-- Background Image -->
+                <div class="background-image">
+                    <img src="WhatsApp Image 2025-07-30 at 10.34.41 PM.jpeg" alt="Kerala Sit-out Scene" id="sceneImage">
+                </div>
+
+                <!-- Character Seats and Speech Bubbles -->
+                <div class="character-seats">
+                    <!-- Character 1: Left-most Man (Yellow shirt, white mundu) -->
+                    <div class="character-seat character-1" data-character="retired_teacher">
+                        <div class="speech-bubble" id="bubble-1">
+                            <div class="bubble-content">
+                                <div class="speaker-name">Retired Teacher</div>
+                                <div class="message-text">Welcome to our sit-out! How is everyone doing today?</div>
+                            </div>
+                            <div class="bubble-arrow"></div>
+                        </div>
+                        <div class="character-info">
+                            <div class="character-avatar">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="character-name">Retired Teacher</div>
+                        </div>
+                    </div>
+
+                    <!-- Character 2: Left-middle Woman (Green saree) -->
+                    <div class="character-seat character-2" data-character="young_mother">
+                        <div class="speech-bubble" id="bubble-2">
+                            <div class="bubble-content">
+                                <div class="speaker-name">Young Mother</div>
+                                <div class="message-text">The children are doing well in school this year.</div>
+                            </div>
+                            <div class="bubble-arrow"></div>
+                        </div>
+                        <div class="character-info">
+                            <div class="character-avatar">
+                                <i class="fas fa-female"></i>
+                            </div>
+                            <div class="character-name">Young Mother</div>
+                        </div>
+                    </div>
+
+                    <!-- Character 3: Right-middle Woman (Orange saree) -->
+                    <div class="character-seat character-3" data-character="shop_owner">
+                        <div class="speech-bubble" id="bubble-3">
+                            <div class="bubble-content">
+                                <div class="speaker-name">Shop Owner</div>
+                                <div class="message-text">Business has been quite good this month.</div>
+                            </div>
+                            <div class="bubble-arrow"></div>
+                        </div>
+                        <div class="character-info">
+                            <div class="character-avatar">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <div class="character-name">Shop Owner</div>
+                        </div>
+                    </div>
+
+                    <!-- Character 4: Right-most Man (Blue shirt) -->
+                    <div class="character-seat character-4" data-character="old_farmer">
+                        <div class="speech-bubble" id="bubble-4">
+                            <div class="bubble-content">
+                                <div class="speaker-name">Old Farmer</div>
+                                <div class="message-text">The weather has been perfect for the crops.</div>
+                            </div>
+                            <div class="bubble-arrow"></div>
+                        </div>
+                        <div class="character-info">
+                            <div class="character-avatar">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                            <div class="character-name">Old Farmer</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conversation Log -->
+                <div class="conversation-log">
+                    <div class="log-header">
+                        <h3><i class="fas fa-comments"></i> Conversation Log</h3>
+                        <button id="clearLog" class="btn btn-small">
+                            <i class="fas fa-trash"></i>
+                            Clear
+                        </button>
+                    </div>
+                    <div class="log-content" id="conversationLog">
+                        <div class="log-entry">
+                            <span class="timestamp">10:30 AM</span>
+                            <span class="speaker">Retired Teacher:</span>
+                            <span class="message">Welcome to our sit-out! How is everyone doing today?</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2024 KudumbAIshree - Built with ❤️ for the "Useless Projects" Hackathon</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
