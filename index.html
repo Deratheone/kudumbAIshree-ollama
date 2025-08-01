@@ -1,159 +1,921 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KudumbAIshree - Kerala Sit-out Chat Experience</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <h1 class="title">
-                    <i class="fas fa-home"></i>
-                    KudumbAIshree
-                </h1>
-                <p class="subtitle">Kerala Sit-out Chat Experience</p>
-            </div>
-            <div class="controls">
-                <button id="startChat" class="btn btn-primary">
-                    <i class="fas fa-play"></i>
-                    Start Chat
-                </button>
-                <button id="pauseChat" class="btn btn-secondary" disabled>
-                    <i class="fas fa-pause"></i>
-                    Pause
-                </button>
-                <button id="resetChat" class="btn btn-secondary">
-                    <i class="fas fa-redo"></i>
-                    Reset
-                </button>
-            </div>
-        </header>
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <h1 class="title">
+            <i class="fas fa-home"></i>
+            KudumbAIshree
+          </h1>
+          <p class="subtitle">Kerala Sit-out Chat Experience</p>
+        </div>
+        <div class="controls">
+          <button id="startChat" class="btn btn-primary">
+            <i class="fas fa-play"></i>
+            Start Chat
+          </button>
+          <button id="pauseChat" class="btn btn-secondary" disabled>
+            <i class="fas fa-pause"></i>
+            Pause
+          </button>
+          <button id="resetChat" class="btn btn-secondary">
+            <i class="fas fa-redo"></i>
+            Reset
+          </button>
+          <button id="settingsBtn" class="btn btn-secondary">
+            <i class="fas fa-cog"></i>
+            Settings
+          </button>
+        </div>
+      </header>
 
-        <!-- Main Chat Scene -->
-        <main class="chat-scene">
-            <div class="scene-container">
-                <!-- Background Image -->
-                <div class="background-image">
-                    <img src="WhatsApp Image 2025-07-30 at 10.34.41 PM.jpeg" alt="Kerala Sit-out Scene" id="sceneImage">
+      <!-- Main Chat Scene -->
+      <main class="chat-scene">
+        <div class="scene-container">
+          <!-- Background Image -->
+          <div class="background-image">
+            <img
+              src="WhatsApp Image 2025-07-30 at 10.34.41 PM.jpeg"
+              alt="Kerala Sit-out Scene"
+              id="sceneImage"
+            />
+          </div>
+
+          <!-- Character Seats and Speech Bubbles -->
+          <div class="character-seats">
+            <!-- Character 1: Aliyamma - Curious Teacher -->
+            <div class="character-seat character-1" data-character="old_farmer">
+              <div class="speech-bubble" id="bubble-1">
+                <div class="bubble-content">
+                  <div class="speaker-name">Babu</div>
+                  <div class="message-text">
+                    Life is like a river - it flows with purpose, even when we
+                    can't see the destination.
+                  </div>
                 </div>
-
-                <!-- Character Seats and Speech Bubbles -->
-                <div class="character-seats">
-                    <!-- Character 1: Left-most Man (Yellow shirt, white mundu) -->
-                    <div class="character-seat character-1" data-character="retired_teacher">
-                        <div class="speech-bubble" id="bubble-1">
-                            <div class="bubble-content">
-                                <div class="speaker-name">Retired Teacher</div>
-                                <div class="message-text">Welcome to our sit-out! How is everyone doing today?</div>
-                            </div>
-                            <div class="bubble-arrow"></div>
-                        </div>
-                        <div class="character-info">
-                            <div class="character-avatar">
-                                <i class="fas fa-user-tie"></i>
-                            </div>
-                            <div class="character-name">Retired Teacher</div>
-                        </div>
-                    </div>
-
-                    <!-- Character 2: Left-middle Woman (Green saree) -->
-                    <div class="character-seat character-2" data-character="young_mother">
-                        <div class="speech-bubble" id="bubble-2">
-                            <div class="bubble-content">
-                                <div class="speaker-name">Young Mother</div>
-                                <div class="message-text">The children are doing well in school this year.</div>
-                            </div>
-                            <div class="bubble-arrow"></div>
-                        </div>
-                        <div class="character-info">
-                            <div class="character-avatar">
-                                <i class="fas fa-female"></i>
-                            </div>
-                            <div class="character-name">Young Mother</div>
-                        </div>
-                    </div>
-
-                    <!-- Character 3: Right-middle Woman (Orange saree) -->
-                    <div class="character-seat character-3" data-character="shop_owner">
-                        <div class="speech-bubble" id="bubble-3">
-                            <div class="bubble-content">
-                                <div class="speaker-name">Shop Owner</div>
-                                <div class="message-text">Business has been quite good this month.</div>
-                            </div>
-                            <div class="bubble-arrow"></div>
-                        </div>
-                        <div class="character-info">
-                            <div class="character-avatar">
-                                <i class="fas fa-store"></i>
-                            </div>
-                            <div class="character-name">Shop Owner</div>
-                        </div>
-                    </div>
-
-                    <!-- Character 4: Right-most Man (Blue shirt) -->
-                    <div class="character-seat character-4" data-character="old_farmer">
-                        <div class="speech-bubble" id="bubble-4">
-                            <div class="bubble-content">
-                                <div class="speaker-name">Old Farmer</div>
-                                <div class="message-text">The weather has been perfect for the crops.</div>
-                            </div>
-                            <div class="bubble-arrow"></div>
-                        </div>
-                        <div class="character-info">
-                            <div class="character-avatar">
-                                <i class="fas fa-seedling"></i>
-                            </div>
-                            <div class="character-name">Old Farmer</div>
-                        </div>
-                    </div>
+                <div class="bubble-arrow"></div>
+              </div>
+              <div class="character-info">
+                <div class="character-avatar">
+                  <i class="fas fa-brain"></i>
                 </div>
+                <div class="character-name">Babu</div>
+              </div>
+            </div>
 
-                <!-- Conversation Log Toggle Button -->
-                <button id="toggleLog" class="log-toggle-btn">
-                    <i class="fas fa-comments"></i>
-                    <span class="toggle-text">Show Log</span>
+            <!-- Character 2: Babu - Philosophical Thinker -->
+            <div
+              class="character-seat character-2"
+              data-character="retired_teacher"
+            >
+              <div class="speech-bubble" id="bubble-2">
+                <div class="bubble-content">
+                  <div class="speaker-name">Aliyamma</div>
+                  <div class="message-text">
+                    Have you ever wondered why children learn differently these
+                    days?
+                  </div>
+                </div>
+                <div class="bubble-arrow"></div>
+              </div>
+              <div class="character-info">
+                <div class="character-avatar">
+                  <i class="fas fa-question-circle"></i>
+                </div>
+                <div class="character-name">Aliyamma</div>
+              </div>
+            </div>
+
+            <!-- Character 3: Right-middle Woman (Orange saree) -->
+            <div
+              class="character-seat character-3"
+              data-character="young_mother"
+            >
+              <div class="speech-bubble" id="bubble-3">
+                <div class="bubble-content">
+                  <div class="speaker-name">Mary</div>
+                  <div class="message-text">
+                    I found a practical solution to manage household expenses
+                    better.
+                  </div>
+                </div>
+                <div class="bubble-arrow"></div>
+              </div>
+              <div class="character-info">
+                <div class="character-avatar">
+                  <i class="fas fa-store"></i>
+                </div>
+                <div class="character-name">Mary</div>
+              </div>
+            </div>
+
+            <!-- Character 4: Right-most Man (Blue shirt) -->
+            <div class="character-seat character-4" data-character="shop_owner">
+              <div class="speech-bubble" id="bubble-4">
+                <div class="bubble-content">
+                  <div class="speaker-name">Chakko</div>
+                  <div class="message-text">
+                    Let me tell you an interesting story that happened in my
+                    shop yesterday!
+                  </div>
+                </div>
+                <div class="bubble-arrow"></div>
+              </div>
+              <div class="character-info">
+                <div class="character-avatar">
+                  <i class="fas fa-seedling"></i>
+                </div>
+                <div class="character-name">Chakko</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conversation Log Toggle Button -->
+          <button id="toggleLog" class="log-toggle-btn">
+            <i class="fas fa-comments"></i>
+            <span class="toggle-text">Show Log</span>
+          </button>
+
+          <!-- Conversation Log -->
+          <div class="conversation-log" id="conversationLog">
+            <div class="log-header">
+              <h3><i class="fas fa-comments"></i> Conversation Log</h3>
+              <div class="log-controls">
+                <button id="clearLog" class="btn btn-small">
+                  <i class="fas fa-trash"></i>
+                  Clear
                 </button>
-
-                <!-- Conversation Log -->
-                <div class="conversation-log" id="conversationLog">
-                    <div class="log-header">
-                        <h3><i class="fas fa-comments"></i> Conversation Log</h3>
-                        <div class="log-controls">
-                            <button id="clearLog" class="btn btn-small">
-                                <i class="fas fa-trash"></i>
-                                Clear
-                            </button>
-                            <button id="closeLog" class="btn btn-small">
-                                <i class="fas fa-times"></i>
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                    <div class="log-content" id="conversationLogContent">
-                        <div class="log-entry">
-                            <span class="timestamp">10:30 AM</span>
-                            <span class="speaker">Retired Teacher:</span>
-                            <span class="message">Welcome to our sit-out! How is everyone doing today?</span>
-                        </div>
-                    </div>
-                </div>
+                <button id="closeLog" class="btn btn-small">
+                  <i class="fas fa-times"></i>
+                  Close
+                </button>
+              </div>
             </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="footer-content">
-                <p>&copy; 2024 KudumbAIshree - Built with ❤️ for the "Useless Projects" Hackathon</p>
+            <div class="log-content" id="conversationLogContent">
+              <div class="log-entry">
+                <span class="timestamp">10:30 AM</span>
+                <span class="speaker">Babu:</span>
+                <span class="message"
+                  >Welcome to our sit-out! I was just contemplating how
+                  gatherings like this bring deeper meaning to our lives.</span
+                >
+              </div>
             </div>
-        </footer>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="footer-content">
+          <p>
+            &copy; 2024 KudumbAIshree - Built with ❤️ for the "Useless Projects"
+            Hackathon
+          </p>
+        </div>
+      </footer>
     </div>
 
-    <script src="script.js"></script>
-</body>
-</html> 
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2><i class="fas fa-cog"></i> Settings</h2>
+          <button id="closeSettings" class="modal-close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-section">
+            <h3><i class="fas fa-comments"></i> Chat Settings</h3>
+            <div class="setting-item">
+              <label for="chatSpeed">Message Interval (seconds):</label>
+              <input
+                type="range"
+                id="chatSpeed"
+                min="1"
+                max="15"
+                value="3"
+                step="0.5"
+              />
+              <span id="chatSpeedValue">3.0s</span>
+              <div class="setting-help">
+                <p>Controls how fast characters respond to each other</p>
+              </div>
+            </div>
+            <div class="setting-item">
+              <label for="responseLength">Response Length:</label>
+              <select id="responseLength" class="setting-select">
+                <option value="short">Short (1 sentence)</option>
+                <option value="medium" selected>Medium (1-2 sentences)</option>
+                <option value="long">Long (2-3 sentences)</option>
+              </select>
+              <div class="setting-help">
+                <p>Controls how long each character's response should be</p>
+              </div>
+            </div>
+            <div class="setting-item">
+              <label>
+                <input type="checkbox" id="enableAI" checked />
+                Enable AI Responses
+              </label>
+              <div class="setting-help">
+                <p>When disabled, characters will use pre-written messages</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-section">
+            <h3><i class="fas fa-users"></i> Character Settings</h3>
+            <div class="setting-item">
+              <label for="characterOrder">Speaking Order:</label>
+              <div class="character-order-display">
+                <div class="character-badge">
+                  <i class="fas fa-brain"></i>
+                  <span>Babu</span>
+                  <small>Philosophical</small>
+                </div>
+                <div class="order-arrow">→</div>
+                <div class="character-badge">
+                  <i class="fas fa-question-circle"></i>
+                  <span>Aliyamma</span>
+                  <small>Curious</small>
+                </div>
+                <div class="order-arrow">→</div>
+                <div class="character-badge">
+                  <i class="fas fa-store"></i>
+                  <span>Mary</span>
+                  <small>Practical</small>
+                </div>
+                <div class="order-arrow">→</div>
+                <div class="character-badge">
+                  <i class="fas fa-seedling"></i>
+                  <span>Chakko</span>
+                  <small>Storyteller</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-section">
+            <h3><i class="fas fa-info-circle"></i> Backend Status</h3>
+            <div class="setting-item">
+              <div class="status-info">
+                <div class="status-row">
+                  <span>Backend Connection:</span>
+                  <span id="backendStatus" class="status-indicator"
+                    >Checking...</span
+                  >
+                </div>
+                <div class="status-row">
+                  <span>Total Messages:</span>
+                  <span id="messageCount">0</span>
+                </div>
+                <div class="status-row">
+                  <span>Current Topic:</span>
+                  <span id="currentTopic">Not selected</span>
+                </div>
+              </div>
+              <button id="testBackend" class="btn btn-secondary">
+                <i class="fas fa-plug"></i>
+                Test Backend
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="saveSettings" class="btn btn-primary">
+            <i class="fas fa-save"></i>
+            Save Settings
+          </button>
+          <button id="cancelSettings" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script-clean.js"></script>
+
+    <!-- Working button handlers -->
+    <script>
+      // Simple test to verify settings modal works
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("DOM loaded, testing settings modal...");
+
+        const settingsBtn = document.getElementById("settingsBtn");
+        const settingsModal = document.getElementById("settingsModal");
+        const saveSettingsBtn = document.getElementById("saveSettings");
+        const testConnectionBtn = document.getElementById("testConnection");
+        const closeSettingsBtn = document.getElementById("closeSettings");
+        const cancelSettingsBtn = document.getElementById("cancelSettings");
+        const apiKeyInput = document.getElementById("apiKeyInput");
+        const toggleApiKeyBtn = document.getElementById("toggleApiKey");
+        const connectionStatus = document.getElementById("connectionStatus");
+        const chatSpeedSlider = document.getElementById("chatSpeed");
+        const chatSpeedValue = document.getElementById("chatSpeedValue");
+        const useAICheckbox = document.getElementById("useAI");
+
+        // Main app buttons
+        const startChatBtn = document.getElementById("startChat");
+        const pauseChatBtn = document.getElementById("pauseChat");
+        const resetChatBtn = document.getElementById("resetChat");
+        const toggleLogBtn = document.getElementById("toggleLog");
+        const conversationLog = document.getElementById("conversationLog");
+
+        console.log("Elements found:", {
+          settingsBtn: !!settingsBtn,
+          settingsModal: !!settingsModal,
+          saveSettingsBtn: !!saveSettingsBtn,
+          testConnectionBtn: !!testConnectionBtn,
+        });
+
+        if (settingsBtn && settingsModal) {
+          // Add a direct event listener as backup
+          settingsBtn.addEventListener("click", (e) => {
+            console.log("Settings button clicked directly!");
+            settingsModal.classList.add("show");
+            e.preventDefault();
+            e.stopPropagation();
+          });
+
+          console.log("Direct event listener added to settings button");
+        } else {
+          console.error("Settings elements not found!");
+        }
+
+        // Chat speed slider functionality
+        if (chatSpeedSlider && chatSpeedValue) {
+          // Load saved chat speed
+          const savedSpeed = localStorage.getItem("chat_speed") || "3";
+          chatSpeedSlider.value = savedSpeed;
+          chatSpeedValue.textContent = `${parseFloat(savedSpeed).toFixed(1)}s`;
+
+          // Update display when slider changes
+          chatSpeedSlider.addEventListener("input", () => {
+            const speed = chatSpeedSlider.value;
+            chatSpeedValue.textContent = `${parseFloat(speed).toFixed(1)}s`;
+            localStorage.setItem("chat_speed", speed);
+            console.log(`Chat speed updated to: ${speed}s`);
+          });
+        }
+
+        // Add direct event listeners for settings buttons
+        if (saveSettingsBtn) {
+          saveSettingsBtn.addEventListener("click", () => {
+            console.log("Save Settings clicked!");
+
+            try {
+              // Save chat speed
+              if (chatSpeedSlider) {
+                const chatSpeed = chatSpeedSlider.value;
+                localStorage.setItem("chat_speed", chatSpeed);
+                console.log(`Chat speed saved: ${chatSpeed}s`);
+              }
+
+              // Save response length
+              const responseLengthSelect =
+                document.getElementById("responseLength");
+              if (responseLengthSelect) {
+                const responseLength = responseLengthSelect.value;
+                localStorage.setItem("response_length", responseLength);
+                console.log(`Response length saved: ${responseLength}`);
+              }
+
+              // Save AI usage preference
+              const enableAICheckbox = document.getElementById("enableAI");
+              if (enableAICheckbox) {
+                localStorage.setItem(
+                  "enable_ai",
+                  enableAICheckbox.checked.toString()
+                );
+                console.log(`AI enabled: ${enableAICheckbox.checked}`);
+              }
+
+              // Update backend status if main app exists
+              if (window.kudumbAIshree) {
+                console.log("Settings updated in main app");
+
+                // Reload settings in the main app
+                window.kudumbAIshree.reloadSettings();
+
+                // Update the current topic display
+                const currentTopicSpan =
+                  document.getElementById("currentTopic");
+                if (currentTopicSpan && window.kudumbAIshree.currentTopic) {
+                  currentTopicSpan.textContent =
+                    window.kudumbAIshree.currentTopic;
+                }
+
+                // Update message count
+                const messageCountSpan =
+                  document.getElementById("messageCount");
+                if (messageCountSpan) {
+                  messageCountSpan.textContent =
+                    window.kudumbAIshree.backendService.requestCount.toString();
+                }
+
+                // Update backend status
+                const backendStatusSpan =
+                  document.getElementById("backendStatus");
+                if (backendStatusSpan) {
+                  if (window.kudumbAIshree.backendService.isAvailable) {
+                    backendStatusSpan.textContent = "Connected";
+                    backendStatusSpan.className = "status-indicator success";
+                  } else {
+                    backendStatusSpan.textContent = "Disconnected";
+                    backendStatusSpan.className = "status-indicator error";
+                  }
+                }
+              }
+
+              alert("Settings saved successfully!");
+
+              // Close modal
+              settingsModal.classList.remove("show");
+            } catch (error) {
+              console.error("Error saving settings:", error);
+              alert("Error saving settings: " + error.message);
+            }
+          });
+        }
+
+        // Add Test Backend button functionality
+        const testBackendBtn = document.getElementById("testBackend");
+        if (testBackendBtn) {
+          testBackendBtn.addEventListener("click", async () => {
+            console.log("Test Backend clicked!");
+
+            const backendStatusSpan = document.getElementById("backendStatus");
+            if (backendStatusSpan) {
+              backendStatusSpan.textContent = "Testing...";
+              backendStatusSpan.className = "status-indicator checking";
+            }
+
+            try {
+              const response = await fetch("http://localhost:5000/api/health");
+              if (response.ok) {
+                const data = await response.json();
+                console.log("Backend test successful:", data);
+
+                if (backendStatusSpan) {
+                  backendStatusSpan.textContent = "Connected";
+                  backendStatusSpan.className = "status-indicator success";
+                }
+
+                alert("✅ Backend connection successful!");
+              } else {
+                throw new Error(`Backend returned ${response.status}`);
+              }
+            } catch (error) {
+              console.error("Backend test failed:", error);
+
+              if (backendStatusSpan) {
+                backendStatusSpan.textContent = "Failed";
+                backendStatusSpan.className = "status-indicator error";
+              }
+
+              alert(
+                "❌ Backend connection failed. Make sure Python backend is running on port 5000."
+              );
+            }
+          });
+        }
+
+        if (testConnectionBtn) {
+          testConnectionBtn.addEventListener("click", async () => {
+            console.log("Test Connection clicked!");
+
+            try {
+              // Show testing state
+              if (connectionStatus) {
+                connectionStatus.textContent = "Testing connection...";
+                connectionStatus.className = "connection-status testing";
+              }
+              testConnectionBtn.disabled = true;
+
+              // Get API key
+              let apiKey = apiKeyInput.value.trim();
+              if (!apiKey) {
+                apiKey = localStorage.getItem("gemini_api_key");
+              }
+
+              if (!apiKey) {
+                throw new Error("Please enter an API key first");
+              }
+
+              if (!apiKey.startsWith("AIza")) {
+                throw new Error(
+                  'Invalid API key format. Key should start with "AIza"'
+                );
+              }
+
+              // Simple test request
+              const response = await fetch(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-goog-api-key": apiKey,
+                  },
+                  body: JSON.stringify({
+                    contents: [
+                      {
+                        parts: [
+                          {
+                            text: "Say hello in one word",
+                          },
+                        ],
+                      },
+                    ],
+                    generationConfig: {
+                      maxOutputTokens: 10,
+                      temperature: 0.7,
+                    },
+                  }),
+                }
+              );
+
+              if (response.ok) {
+                const data = await response.json();
+                if (connectionStatus) {
+                  connectionStatus.textContent = "✅ Connection successful!";
+                  connectionStatus.className = "connection-status success";
+                }
+                console.log("API test successful:", data);
+              } else {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(
+                  `API Error ${response.status}: ${
+                    errorData.error?.message || response.statusText
+                  }`
+                );
+              }
+            } catch (error) {
+              console.error("API test failed:", error);
+              if (connectionStatus) {
+                connectionStatus.textContent = `❌ Connection failed: ${error.message}`;
+                connectionStatus.className = "connection-status error";
+              }
+            } finally {
+              testConnectionBtn.disabled = false;
+
+              // Clear status after 5 seconds
+              setTimeout(() => {
+                if (connectionStatus) {
+                  connectionStatus.textContent = "";
+                  connectionStatus.className = "connection-status";
+                }
+              }, 5000);
+            }
+          });
+        }
+
+        // Close modal handlers
+        if (closeSettingsBtn) {
+          closeSettingsBtn.addEventListener("click", () => {
+            settingsModal.classList.remove("show");
+          });
+        }
+
+        if (cancelSettingsBtn) {
+          cancelSettingsBtn.addEventListener("click", () => {
+            settingsModal.classList.remove("show");
+          });
+        }
+
+        // Toggle API key visibility
+        if (toggleApiKeyBtn && apiKeyInput) {
+          toggleApiKeyBtn.addEventListener("click", () => {
+            console.log("Toggle API Key clicked!");
+
+            const icon = toggleApiKeyBtn.querySelector("i");
+
+            if (apiKeyInput.type === "password") {
+              apiKeyInput.type = "text";
+              icon.className = "fas fa-eye-slash";
+
+              // If showing masked key, load actual key
+              const savedApiKey = localStorage.getItem("gemini_api_key");
+              if (savedApiKey && apiKeyInput.value === "••••••••••••••••") {
+                apiKeyInput.value = savedApiKey;
+              }
+            } else {
+              apiKeyInput.type = "password";
+              icon.className = "fas fa-eye";
+
+              // If hiding actual key, show masked version
+              if (apiKeyInput.value && apiKeyInput.value.length > 10) {
+                apiKeyInput.value = "••••••••••••••••";
+              }
+            }
+          });
+
+          // Load saved API key on page load
+          const savedApiKey = localStorage.getItem("gemini_api_key");
+          if (savedApiKey) {
+            apiKeyInput.value = "••••••••••••••••";
+            apiKeyInput.dataset.hasKey = "true";
+          }
+        }
+
+        // Close on outside click
+        if (settingsModal) {
+          settingsModal.addEventListener("click", (e) => {
+            if (e.target === settingsModal) {
+              settingsModal.classList.remove("show");
+            }
+          });
+        }
+
+        // Add event handlers for main app buttons
+        if (startChatBtn) {
+          startChatBtn.addEventListener("click", () => {
+            console.log("Start Chat clicked!");
+
+            // Try to use the main app first
+            if (window.kudumbAIshree && window.kudumbAIshree.startChat) {
+              console.log("Using main app startChat method");
+              window.kudumbAIshree.startChat();
+            } else {
+              console.log("Main app not available, using fallback chat");
+              // Fallback: Simple chat simulation
+              startSimpleChat();
+            }
+          });
+        }
+
+        if (pauseChatBtn) {
+          pauseChatBtn.addEventListener("click", () => {
+            console.log("Pause Chat clicked!");
+
+            if (window.kudumbAIshree && window.kudumbAIshree.pauseChat) {
+              window.kudumbAIshree.pauseChat();
+            } else {
+              pauseSimpleChat();
+            }
+          });
+        }
+
+        if (resetChatBtn) {
+          resetChatBtn.addEventListener("click", () => {
+            console.log("Reset Chat clicked!");
+
+            if (window.kudumbAIshree && window.kudumbAIshree.resetChat) {
+              window.kudumbAIshree.resetChat();
+            } else {
+              resetSimpleChat();
+            }
+          });
+        }
+
+        if (toggleLogBtn && conversationLog) {
+          toggleLogBtn.addEventListener("click", () => {
+            console.log("Toggle Log clicked!");
+
+            if (
+              window.kudumbAIshree &&
+              window.kudumbAIshree.toggleConversationLog
+            ) {
+              window.kudumbAIshree.toggleConversationLog();
+            } else {
+              // Fallback: Simple log toggle
+              const isVisible = conversationLog.classList.contains("show");
+              if (isVisible) {
+                conversationLog.classList.remove("show");
+                toggleLogBtn.querySelector(".toggle-text").textContent =
+                  "Show Log";
+                toggleLogBtn.style.opacity = "1";
+              } else {
+                conversationLog.classList.add("show");
+                toggleLogBtn.querySelector(".toggle-text").textContent =
+                  "Hide Log";
+                toggleLogBtn.style.opacity = "0.7";
+              }
+            }
+          });
+        }
+
+        // Add event handlers for conversation log buttons
+        const clearLogBtn = document.getElementById("clearLog");
+        const closeLogBtn = document.getElementById("closeLog");
+
+        if (clearLogBtn) {
+          clearLogBtn.addEventListener("click", () => {
+            console.log("Clear Log clicked!");
+
+            if (
+              window.kudumbAIshree &&
+              window.kudumbAIshree.clearConversationLog
+            ) {
+              window.kudumbAIshree.clearConversationLog();
+            } else {
+              // Fallback: Clear log content
+              const logContent = document.getElementById(
+                "conversationLogContent"
+              );
+              if (logContent) {
+                logContent.innerHTML =
+                  '<div class="log-entry"><span class="timestamp">10:30 AM</span><span class="speaker">Babu:</span><span class="message">Welcome to our sit-out! I was just contemplating how gatherings like this bring deeper meaning to our lives.</span></div>';
+              }
+            }
+          });
+        }
+
+        if (closeLogBtn) {
+          closeLogBtn.addEventListener("click", () => {
+            console.log("Close Log clicked!");
+
+            if (
+              window.kudumbAIshree &&
+              window.kudumbAIshree.hideConversationLog
+            ) {
+              window.kudumbAIshree.hideConversationLog();
+            } else {
+              // Fallback: Hide conversation log
+              conversationLog.classList.remove("show");
+              if (toggleLogBtn) {
+                toggleLogBtn.querySelector(".toggle-text").textContent =
+                  "Show Log";
+                toggleLogBtn.style.opacity = "1";
+              }
+            }
+          });
+        }
+
+        // Simple chat fallback functions
+        let chatInterval = null;
+        let isChatActive = false;
+        let currentCharacterIndex = 0;
+        const characters = [
+          "old_farmer",
+          "retired_teacher",
+          "young_mother",
+          "shop_owner",
+        ];
+        const characterNames = {
+          old_farmer: "Babu",
+          retired_teacher: "Aliyamma",
+          young_mother: "Mary",
+          shop_owner: "Chakko",
+        };
+
+        const messages = {
+          old_farmer: [
+            "I was contemplating how farming teaches us about the deeper meaning of patience.",
+            "There's something philosophical about the way nature operates, don't you think?",
+            "Life is like tending a garden - it requires both action and acceptance.",
+          ],
+          retired_teacher: [
+            "Have you ever wondered why children learn differently these days?",
+            "Let me explain something interesting I noticed about modern education.",
+            "I'm curious - what makes learning truly effective?",
+          ],
+          young_mother: [
+            "I found a practical solution to manage household expenses better.",
+            "Here's a real-world approach that actually works for busy families.",
+            "The most effective way to solve this problem is quite simple.",
+          ],
+          shop_owner: [
+            "Let me tell you an interesting story that happened in my shop yesterday!",
+            "I have the most amusing anecdote about one of my regular customers.",
+            "You won't believe the experience I had last week - it's quite a story!",
+          ],
+        };
+
+        function startSimpleChat() {
+          if (isChatActive) return;
+
+          console.log("Starting simple chat fallback");
+          isChatActive = true;
+          startChatBtn.disabled = true;
+          if (pauseChatBtn) pauseChatBtn.disabled = false;
+
+          const chatSpeed =
+            parseFloat(localStorage.getItem("chat_speed") || "3") * 1000;
+
+          chatInterval = setInterval(() => {
+            const character = characters[currentCharacterIndex];
+            const characterMessages = messages[character];
+            const message =
+              characterMessages[
+                Math.floor(Math.random() * characterMessages.length)
+              ];
+
+            // Show message in speech bubble
+            showMessage(character, message);
+
+            // Add to conversation log
+            addToLog(characterNames[character], message);
+
+            currentCharacterIndex =
+              (currentCharacterIndex + 1) % characters.length;
+          }, chatSpeed);
+        }
+
+        function pauseSimpleChat() {
+          if (!isChatActive) return;
+
+          isChatActive = false;
+          startChatBtn.disabled = false;
+          if (pauseChatBtn) pauseChatBtn.disabled = true;
+
+          if (chatInterval) {
+            clearInterval(chatInterval);
+            chatInterval = null;
+          }
+        }
+
+        function resetSimpleChat() {
+          pauseSimpleChat();
+          currentCharacterIndex = 0;
+
+          // Clear all speech bubbles
+          document.querySelectorAll(".speech-bubble").forEach((bubble) => {
+            bubble.classList.remove("active");
+          });
+
+          // Clear conversation log
+          const logContent = document.getElementById("conversationLogContent");
+          if (logContent) {
+            logContent.innerHTML =
+              '<div class="log-entry"><span class="timestamp">10:30 AM</span><span class="speaker">Babu:</span><span class="message">Welcome to our sit-out! I was just contemplating how gatherings like this bring deeper meaning to our lives.</span></div>';
+          }
+
+          // Show initial message
+          showMessage(
+            "old_farmer",
+            "Welcome to our sit-out! I was just contemplating how gatherings like this bring deeper meaning to our lives."
+          );
+        }
+
+        function showMessage(character, message) {
+          // Clear all bubbles first
+          document.querySelectorAll(".speech-bubble").forEach((bubble) => {
+            bubble.classList.remove("active");
+          });
+
+          // Show the new bubble
+          const bubbleId = {
+            old_farmer: "bubble-1",
+            retired_teacher: "bubble-2",
+            young_mother: "bubble-3",
+            shop_owner: "bubble-4",
+          }[character];
+
+          const bubble = document.getElementById(bubbleId);
+          if (bubble) {
+            const messageText = bubble.querySelector(".message-text");
+            if (messageText) {
+              messageText.textContent = message;
+            }
+
+            setTimeout(() => {
+              bubble.classList.add("active");
+            }, 100);
+          }
+        }
+
+        function addToLog(speaker, message) {
+          const logContent = document.getElementById("conversationLogContent");
+          if (!logContent) return;
+
+          const timestamp = new Date().toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
+
+          const logEntry = document.createElement("div");
+          logEntry.className = "log-entry";
+          logEntry.innerHTML = `
+            <span class="timestamp">${timestamp}</span>
+            <span class="speaker">${speaker}:</span>
+            <span class="message">${message}</span>
+            <span class="source-indicator" title="Static Message">📝</span>
+          `;
+
+          logContent.appendChild(logEntry);
+          logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        console.log("Main app button handlers added");
+      });
+    </script>
+  </body>
+</html>
