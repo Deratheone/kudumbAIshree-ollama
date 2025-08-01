@@ -49,7 +49,7 @@ class BackendAPIService {
     }
 
     // Generate character message using Python backend
-    async generateCharacterMessage(character, personalityContext, conversationHistory = [], currentTopic = null, responseLength = 'medium', aiProvider = 'gemini', ollamaModel = 'llama3.2:3b') {
+    async generateCharacterMessage(character, personalityContext, conversationHistory = [], currentTopic = null, responseLength = 'medium', aiProvider = 'ollama', ollamaModel = 'llama3.2:3b') {
         try {
             if (!this.isAvailable) {
                 await this.validateBackend();
@@ -70,9 +70,7 @@ class BackendAPIService {
                 ollama_model: ollamaModel
             };
             
-            console.log('Making backend request for:', character, 'with topic:', currentTopic);
             const response = await this.makeBackendRequest('/generate', requestData);
-            console.log('Backend response for', character, ':', response);
             
             this.requestCount++;
             return {
@@ -199,6 +197,168 @@ class CharacterPersonalityManager {
     }
 }
 
+// Topic Manager - Handles topic state and changes
+class TopicManager {
+    constructor(backendService) {
+        this.currentTopic = null;
+        this.backendService = backendService;
+        this.listeners = [];
+        this.topicType = 'random';
+        this.customTopicText = null;
+    }
+
+    // Add listener for topic changes
+    addTopicChangeListener(callback) {
+        this.listeners.push(callback);
+    }
+
+    // Remove listener
+    removeTopicChangeListener(callback) {
+        this.listeners = this.listeners.filter(listener => listener !== callback);
+    }
+
+    // Notify all listeners of topic change
+    notifyListeners(oldTopic, newTopic) {
+        const event = {
+            oldTopic: oldTopic,
+            newTopic: newTopic,
+            topicType: this.topicType,
+            timestamp: new Date().toISOString()
+        };
+        
+        this.listeners.forEach(listener => {
+            try {
+                listener(event);
+            } catch (error) {
+                console.error('Error in topic change listener:', error);
+            }
+        });
+    }
+
+    // Load topic from localStorage or fetch random
+    async loadTopic() {
+        try {
+            const savedTopic = localStorage.getItem('selected_topic');
+            const savedCustomTopic = localStorage.getItem('custom_topic');
+            
+            if (savedTopic === 'custom' && savedCustomTopic) {
+                this.topicType = 'custom';
+                this.customTopicText = savedCustomTopic;
+                this.currentTopic = savedCustomTopic;
+            } else if (savedTopic && savedTopic !== 'random' && savedTopic !== 'custom') {
+                this.topicType = 'predefined';
+                this.currentTopic = savedTopic;
+            } else {
+                this.topicType = 'random';
+                this.currentTopic = await this.fetchRandomTopic();
+            }
+            
+            return this.currentTopic;
+        } catch (error) {
+            console.error('Error loading topic:', error);
+            // Fallback to a default topic
+            this.currentTopic = "The best meal you've ever had";
+            this.topicType = 'predefined';
+            return this.currentTopic;
+        }
+    }
+
+    // Fetch random topic from backend or use fallback
+    async fetchRandomTopic() {
+        try {
+            if (this.backendService && this.backendService.isAvailable) {
+                return await this.backendService.getRandomTopic();
+            } else {
+                // Fallback random topics
+                const fallbackTopics = [
+                    "The best meal you've ever had",
+                    "Childhood memories that still make you smile",
+                    "Your dream vacation destination",
+                    "Your morning routine and how it affects your day",
+                    "What you do to relax after a stressful day",
+                    "Your favorite family tradition",
+                    "The skill you wish you could master instantly",
+                    "Your favorite comfort food and why",
+                    "What you hope people remember about you",
+                    "Your favorite way to spend a weekend",
+                    "The most valuable lesson you've learned"
+                ];
+                return fallbackTopics[Math.floor(Math.random() * fallbackTopics.length)];
+            }
+        } catch (error) {
+            console.error('Error fetching random topic:', error);
+            return "The best meal you've ever had";
+        }
+    }
+
+    // Change topic and notify listeners
+    async changeTopic(newTopicType, customTopicText = null) {
+        const oldTopic = this.currentTopic;
+        
+        try {
+            // Validate custom topic
+            if (newTopicType === 'custom') {
+                if (!customTopicText || customTopicText.trim() === '') {
+                    throw new Error('Custom topic cannot be empty');
+                }
+                if (customTopicText.length > 100) {
+                    throw new Error('Custom topic must be 100 characters or less');
+                }
+                this.topicType = 'custom';
+                this.customTopicText = customTopicText.trim();
+                this.currentTopic = this.customTopicText;
+                localStorage.setItem('custom_topic', this.customTopicText);
+                localStorage.setItem('selected_topic', 'custom');
+            } else if (newTopicType === 'random') {
+                this.topicType = 'random';
+                this.customTopicText = null;
+                this.currentTopic = await this.fetchRandomTopic();
+                localStorage.setItem('selected_topic', 'random');
+            } else {
+                // Predefined topic
+                this.topicType = 'predefined';
+                this.customTopicText = null;
+                this.currentTopic = newTopicType;
+                localStorage.setItem('selected_topic', newTopicType);
+            }
+            
+            // Notify listeners of the change
+            this.notifyListeners(oldTopic, this.currentTopic);
+            
+            return {
+                success: true,
+                oldTopic: oldTopic,
+                newTopic: this.currentTopic,
+                topicType: this.topicType
+            };
+            
+        } catch (error) {
+            console.error('Error changing topic:', error);
+            return {
+                success: false,
+                error: error.message,
+                oldTopic: oldTopic,
+                newTopic: this.currentTopic
+            };
+        }
+    }
+
+    // Get current topic
+    getCurrentTopic() {
+        return this.currentTopic;
+    }
+
+    // Get topic state
+    getTopicState() {
+        return {
+            currentTopic: this.currentTopic,
+            topicType: this.topicType,
+            customTopicText: this.customTopicText,
+            lastChanged: new Date().toISOString()
+        };
+    }
+}
+
 // Simple Context Manager
 class ConversationContextManager {
     constructor() {
@@ -254,7 +414,7 @@ class KudumbAIshree {
         this.chatSpeed = parseFloat(localStorage.getItem('chat_speed') || '3');
         this.responseLength = localStorage.getItem('response_length') || 'medium';
         this.enableAI = localStorage.getItem('enable_ai') !== 'false'; // Default to true
-        this.aiProvider = localStorage.getItem('ai_provider') || 'gemini'; // Default to Gemini
+        this.aiProvider = localStorage.getItem('ai_provider') || 'ollama'; // Default to Ollama
         this.ollamaModel = localStorage.getItem('ollama_model') || 'llama3.2:3b'; // Default model
         
         console.log('Settings loaded:', {
@@ -285,6 +445,11 @@ class KudumbAIshree {
         this.startBtn = document.getElementById('startChat');
         this.pauseBtn = document.getElementById('pauseChat');
         this.resetBtn = document.getElementById('resetChat');
+        this.toggleLogBtn = document.getElementById('toggleLog');
+        this.conversationLog = document.getElementById('conversationLog');
+        this.clearLogBtn = document.getElementById('clearLog');
+        this.closeLogBtn = document.getElementById('closeLog');
+        this.aiLoadingIndicator = document.getElementById('aiLoadingIndicator');
         
         this.speechBubbles = {
             'old_farmer': document.getElementById('bubble-1'),
@@ -305,6 +470,15 @@ class KudumbAIshree {
         }
         if (this.resetBtn) {
             this.resetBtn.addEventListener('click', () => this.resetChat());
+        }
+        if (this.toggleLogBtn) {
+            this.toggleLogBtn.addEventListener('click', () => this.toggleConversationLog());
+        }
+        if (this.clearLogBtn) {
+            this.clearLogBtn.addEventListener('click', () => this.clearConversationLog());
+        }
+        if (this.closeLogBtn) {
+            this.closeLogBtn.addEventListener('click', () => this.hideConversationLog());
         }
     }
 
@@ -355,6 +529,9 @@ class KudumbAIshree {
         this.startBtn.disabled = true;
         this.pauseBtn.disabled = false;
         
+        // Show loading indicator for first response
+        this.showAILoadingIndicator();
+        
         const chatSpeed = this.chatSpeed * 1000;
         
         this.chatInterval = setInterval(async () => {
@@ -370,6 +547,9 @@ class KudumbAIshree {
         this.isChatActive = false;
         this.startBtn.disabled = false;
         this.pauseBtn.disabled = true;
+        
+        // Hide loading indicator when pausing
+        this.hideAILoadingIndicator();
         
         if (this.chatInterval) {
             clearInterval(this.chatInterval);
@@ -387,7 +567,59 @@ class KudumbAIshree {
             if (bubble) bubble.classList.remove('active');
         });
         
+        // Hide loading indicator when resetting
+        this.hideAILoadingIndicator();
+        
         console.log('Chat reset');
+    }
+
+    toggleConversationLog() {
+        if (!this.conversationLog || !this.toggleLogBtn) return;
+        
+        const isVisible = this.conversationLog.classList.contains('show');
+        const toggleText = this.toggleLogBtn.querySelector('.toggle-text');
+        
+        if (isVisible) {
+            // Hide the log
+            this.conversationLog.classList.remove('show');
+            if (toggleText) toggleText.textContent = 'Show Log';
+            console.log('Conversation log hidden');
+        } else {
+            // Show the log
+            this.conversationLog.classList.add('show');
+            if (toggleText) toggleText.textContent = 'Hide Log';
+            console.log('Conversation log shown');
+        }
+    }
+
+    hideConversationLog() {
+        if (!this.conversationLog || !this.toggleLogBtn) return;
+        
+        this.conversationLog.classList.remove('show');
+        const toggleText = this.toggleLogBtn.querySelector('.toggle-text');
+        if (toggleText) toggleText.textContent = 'Show Log';
+        console.log('Conversation log hidden');
+    }
+
+    clearConversationLog() {
+        if (!this.conversationLogContent) return;
+        
+        this.conversationLogContent.innerHTML = '';
+        console.log('Conversation log cleared');
+    }
+
+    showAILoadingIndicator() {
+        if (this.aiLoadingIndicator) {
+            this.aiLoadingIndicator.classList.add('show');
+            console.log('AI loading indicator shown');
+        }
+    }
+
+    hideAILoadingIndicator() {
+        if (this.aiLoadingIndicator) {
+            this.aiLoadingIndicator.classList.remove('show');
+            console.log('AI loading indicator hidden');
+        }
     }
 
     async nextConversationTurn() {
@@ -399,11 +631,17 @@ class KudumbAIshree {
             this.addToConversationLog(this.getCharacterDisplayName(character), result.message, result.source);
             this.contextManager.addMessage(this.getCharacterDisplayName(character), result.message);
             
+            // Hide loading indicator after first message
+            this.hideAILoadingIndicator();
+            
         } catch (error) {
             console.error('Error in conversation turn:', error);
             const fallbackMessage = this.generateFallbackMessage(character);
             this.showMessage(character, fallbackMessage);
             this.addToConversationLog(this.getCharacterDisplayName(character), fallbackMessage, 'fallback');
+            
+            // Hide loading indicator even on error
+            this.hideAILoadingIndicator();
         }
         
         this.currentCharacterIndex = (this.currentCharacterIndex + 1) % this.characterOrder.length;
