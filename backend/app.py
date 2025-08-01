@@ -28,10 +28,10 @@ CORS(app)  # Enable CORS for frontend requests
 
 # Define concise chatbot personalities - optimized for token efficiency
 chatbots = {
-    "retired_teacher": "You are Aliyamma, a 58-year-old retired Malayalam teacher who taught for 35 years. You're naturally curious and love to ask questions about everything.",
-    "old_farmer": "You are Babu, a 65-year-old philosophical farmer from Kerala. You speak with the wisdom of someone who has worked the land for decades.",
-    "shop_owner": "You are Chakko, a 45-year-old shop owner who has run a small general store for 20 years. You're a natural storyteller who loves sharing anecdotes about customers.",
-    "young_mother": "You are Mary, a 32-year-old working mother with two young children. You're practical, efficient, and always thinking about real-world solutions."
+    "old_farmer": "You are Babu, a philosophical farmer from Kerala. You relate everything to farming and nature. Start with 'You know...' or 'In my experience...'",
+    "retired_teacher": "You are Aliyamma, a curious retired teacher from Kerala. You ask questions and explain things clearly. Often say 'Let me tell you something interesting...'",
+    "young_mother": "You are Mary, a practical working mother from Kerala. You focus on real solutions. Often say 'What actually works is...' or 'The practical thing to do is...'",
+    "shop_owner": "You are Chakko, a storytelling shop owner from Kerala. You share anecdotes about customers. Start with 'Let me tell you what happened...' or 'You won't believe this story...'"
 }
 
 # Character display names
@@ -105,7 +105,7 @@ def get_ollama_response(character_id, personality, prompt, response_length="medi
     length_instruction = length_instructions.get(response_length, "Respond in exactly 1 short sentence only. Keep it under 15 words.")
     full_prompt = f"{personality} {length_instruction} Topic: {prompt}. Respond in active voice, and in a simple and colloquial language. Be concise."
     
-    print(f"� Geneerating Ollama response for {character_id} using {model_name}")
+    print(f"🦙 Generating Ollama response for {character_id} using {model_name}")
     print(f"📝 Prompt: {full_prompt[:100]}...")
     
     try:
@@ -121,6 +121,7 @@ def get_ollama_response(character_id, personality, prompt, response_length="medi
             data = response.json()
             message = data.get('response', '').strip()
             if message:
+                message = clean_response(message)  # Clean up extra quotes
                 print(f"✅ Ollama Response: {message}")
                 return message
             else:
@@ -133,6 +134,18 @@ def get_ollama_response(character_id, personality, prompt, response_length="medi
     except Exception as e:
         print(f"❌ Ollama Connection Error: {e}")
         return None
+
+def clean_response(message):
+    """Clean up AI response by removing extra quotes and formatting"""
+    if not message:
+        return message
+    
+    # Remove leading/trailing quotes if they wrap the entire message
+    message = message.strip()
+    if (message.startswith('"') and message.endswith('"')) or (message.startswith("'") and message.endswith("'")):
+        message = message[1:-1].strip()
+    
+    return message
 
 def get_gemini_response(character_id, personality, prompt, response_length="medium"):
     """Generate response using Gemini API"""
@@ -152,6 +165,7 @@ def get_gemini_response(character_id, personality, prompt, response_length="medi
     try:
         response = model.generate_content(full_prompt)
         message = response.text.strip()
+        message = clean_response(message)  # Clean up extra quotes
         print(f"✅ Gemini Response: {message}")
         return message
     except Exception as e:
@@ -220,11 +234,20 @@ def generate_message():
         # Create context for the bot
         if len(conversation_history) == 0:
             # First bot introduces the topic
-            prompt = f"Start a discussion about: {current_topic}"
+            prompt = f"Start a casual conversation about: {current_topic}. Share your personal experience or thoughts."
         else:
-            # Other bots respond to previous messages
-            recent_context = " ".join([f"{msg['speaker']}: {msg['message']}" for msg in conversation_history[-3:]])
-            prompt = f"Continue the discussion about {current_topic}. Previous context: {recent_context}"
+            # Other bots respond to the most recent message directly
+            last_message = conversation_history[-1]
+            last_speaker = last_message['speaker']
+            last_content = last_message['message']
+            
+            # Make it more conversational and responsive
+            if len(conversation_history) == 1:
+                prompt = f"{last_speaker} just said: '{last_content}'. Respond directly to what they said about {current_topic}. Ask a question, share your own experience, or comment on their point."
+            else:
+                # Include one more message for better context
+                second_last = conversation_history[-2]
+                prompt = f"In this conversation about {current_topic}, {second_last['speaker']} said: '{second_last['message']}' and {last_speaker} responded: '{last_content}'. Now join the conversation by responding to {last_speaker}'s point or adding your own perspective."
         
         print(f"📝 Generated prompt: {prompt}")
         
