@@ -2,6 +2,7 @@ try:
     from flask import Flask, request, jsonify
     from flask_cors import CORS
     import google.generativeai as genai
+    import requests
     import os
     import random
     import time
@@ -9,13 +10,18 @@ try:
 except ImportError as e:
     print(f"❌ Missing package: {e}")
     print("Please install missing packages with:")
-    print("pip install flask flask-cors google-generativeai")
+    print("pip install flask flask-cors google-generativeai requests")
     exit(1)
 
 # Set up Gemini API key - using your fresh key
 genai.configure(api_key="AIzaSyDcRgNTS7r_agUVH6wBXPEj4AvcWhsO9m8")
 model = genai.GenerativeModel('gemini-2.0-flash-exp')
 print("✅ Gemini API client initialized")
+
+# Ollama configuration
+OLLAMA_API_URL = "http://localhost:11434/api/generate"
+OLLAMA_DEFAULT_MODEL = "llama3.2:3b"  # Fast and efficient model
+print("✅ Ollama configuration set")
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
@@ -87,8 +93,49 @@ def get_fallback_message(character_id):
     messages = fallback_messages.get(character_id, ["[FALLBACK] Hello everyone!"])
     return random.choice(messages)
 
-def get_response(character_id, personality, prompt, response_length="medium"):
-    """Generate response using the working Gemini client"""
+def get_ollama_response(character_id, personality, prompt, response_length="medium", model_name=OLLAMA_DEFAULT_MODEL):
+    """Generate response using Ollama local AI"""
+    # Set response length based on parameter - more strict for Ollama
+    length_instructions = {
+        "short": "Respond in exactly 1 short sentence only. Keep it under 15 words.",
+        "medium": "Respond in exactly 1 sentence only. Keep it under 20 words.",
+        "long": "Respond in exactly 1-2 short sentences only. Keep it under 30 words total."
+    }
+    
+    length_instruction = length_instructions.get(response_length, "Respond in exactly 1 short sentence only. Keep it under 15 words.")
+    full_prompt = f"{personality} {length_instruction} Topic: {prompt}. Respond in active voice, and in a simple and colloquial language. Be concise."
+    
+    print(f"� Geneerating Ollama response for {character_id} using {model_name}")
+    print(f"📝 Prompt: {full_prompt[:100]}...")
+    
+    try:
+        payload = {
+            "model": model_name,
+            "prompt": full_prompt,
+            "stream": False
+        }
+        
+        response = requests.post(OLLAMA_API_URL, json=payload, timeout=30)
+        
+        if response.status_code == 200:
+            data = response.json()
+            message = data.get('response', '').strip()
+            if message:
+                print(f"✅ Ollama Response: {message}")
+                return message
+            else:
+                print(f"⚠️ Empty response from Ollama")
+                return None
+        else:
+            print(f"❌ Ollama API Error: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        print(f"❌ Ollama Connection Error: {e}")
+        return None
+
+def get_gemini_response(character_id, personality, prompt, response_length="medium"):
+    """Generate response using Gemini API"""
     # Set response length based on parameter
     length_instructions = {
         "short": "Respond in 1 sentence only.",
@@ -99,19 +146,50 @@ def get_response(character_id, personality, prompt, response_length="medium"):
     length_instruction = length_instructions.get(response_length, "Respond in 1 sentence only.")
     full_prompt = f"{personality} {length_instruction} Topic: {prompt}. Respond in active voice, and in a simple and colloquial language."
     
-    print(f"🤖 Generating response for {character_id}")
+    print(f"🤖 Generating Gemini response for {character_id}")
     print(f"📝 Prompt: {full_prompt[:100]}...")
     
     try:
         response = model.generate_content(full_prompt)
         message = response.text.strip()
-        print(f"✅ AI Response: {message}")
+        print(f"✅ Gemini Response: {message}")
         return message
     except Exception as e:
-        print(f"❌ API Error: {e}")
-        fallback_msg = get_fallback_message(character_id)
-        print(f"🔄 Using fallback: {fallback_msg}")
-        return f"FALLBACK_MARKER:{fallback_msg}"
+        print(f"❌ Gemini API Error: {e}")
+        return None
+
+def get_response(character_id, personality, prompt, response_length="medium", ai_provider="gemini", ollama_model=OLLAMA_DEFAULT_MODEL):
+    """Generate response using specified AI provider with fallback chain"""
+    
+    if ai_provider == "ollama":
+        # Try Ollama first
+        message = get_ollama_response(character_id, personality, prompt, response_length, ollama_model)
+        if message:
+            return message
+        
+        print(f"🔄 Ollama failed, trying Gemini...")
+        # Fallback to Gemini
+        message = get_gemini_response(character_id, personality, prompt, response_length)
+        if message:
+            return message
+            
+    else:  # ai_provider == "gemini" or default
+        # Try Gemini first
+        message = get_gemini_response(character_id, personality, prompt, response_length)
+        if message:
+            return message
+        
+        print(f"🔄 Gemini failed, trying Ollama...")
+        # Fallback to Ollama
+        message = get_ollama_response(character_id, personality, prompt, response_length, ollama_model)
+        if message:
+            return message
+    
+    # Both AI providers failed, use static fallback
+    print(f"💥 All AI providers failed! Using static fallback")
+    fallback_msg = get_fallback_message(character_id)
+    print(f"🔄 Using fallback: {fallback_msg}")
+    return f"FALLBACK_MARKER:{fallback_msg}"
 
 @app.route('/api/generate', methods=['POST'])
 def generate_message():
@@ -125,8 +203,10 @@ def generate_message():
         conversation_history = data.get('conversation_history', [])
         current_topic = data.get('current_topic')
         response_length = data.get('response_length', 'medium')
+        ai_provider = data.get('ai_provider', 'gemini')  # Default to Gemini
+        ollama_model = data.get('ollama_model', OLLAMA_DEFAULT_MODEL)
         
-        print(f"👤 Character: {character_id}, Topic: {current_topic}")
+        print(f"👤 Character: {character_id}, Topic: {current_topic}, AI: {ai_provider}")
         
         if not character_id or character_id not in chatbots:
             print(f"❌ Invalid character ID: {character_id}")
@@ -149,7 +229,7 @@ def generate_message():
         print(f"📝 Generated prompt: {prompt}")
         
         # Generate response
-        message = get_response(character_id, personality, prompt, response_length)
+        message = get_response(character_id, personality, prompt, response_length, ai_provider, ollama_model)
         
         # Check if message is fallback
         if message.startswith("FALLBACK_MARKER:"):

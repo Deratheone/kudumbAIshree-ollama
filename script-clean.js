@@ -49,7 +49,7 @@ class BackendAPIService {
     }
 
     // Generate character message using Python backend
-    async generateCharacterMessage(character, personalityContext, conversationHistory = [], currentTopic = null, responseLength = 'medium') {
+    async generateCharacterMessage(character, personalityContext, conversationHistory = [], currentTopic = null, responseLength = 'medium', aiProvider = 'gemini', ollamaModel = 'llama3.2:3b') {
         try {
             if (!this.isAvailable) {
                 await this.validateBackend();
@@ -65,7 +65,9 @@ class BackendAPIService {
                     message: msg.message
                 })),
                 current_topic: currentTopic,
-                response_length: responseLength
+                response_length: responseLength,
+                ai_provider: aiProvider,
+                ollama_model: ollamaModel
             };
             
             console.log('Making backend request for:', character, 'with topic:', currentTopic);
@@ -252,11 +254,15 @@ class KudumbAIshree {
         this.chatSpeed = parseFloat(localStorage.getItem('chat_speed') || '3');
         this.responseLength = localStorage.getItem('response_length') || 'medium';
         this.enableAI = localStorage.getItem('enable_ai') !== 'false'; // Default to true
+        this.aiProvider = localStorage.getItem('ai_provider') || 'gemini'; // Default to Gemini
+        this.ollamaModel = localStorage.getItem('ollama_model') || 'llama3.2:3b'; // Default model
         
         console.log('Settings loaded:', {
             chatSpeed: this.chatSpeed,
             responseLength: this.responseLength,
-            enableAI: this.enableAI
+            enableAI: this.enableAI,
+            aiProvider: this.aiProvider,
+            ollamaModel: this.ollamaModel
         });
     }
 
@@ -436,7 +442,9 @@ class KudumbAIshree {
                 profile, 
                 conversationContext,
                 this.currentTopic,
-                this.responseLength
+                this.responseLength,
+                this.aiProvider,
+                this.ollamaModel
             );
             
             if (result.success) {
