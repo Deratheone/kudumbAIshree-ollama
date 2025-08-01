@@ -310,8 +310,24 @@ class KudumbAIshree {
             if (isAvailable) {
                 console.log('✅ Backend connection successful');
                 this.useAI = true;
-                this.currentTopic = await this.backendService.getRandomTopic();
-                console.log('Selected conversation topic:', this.currentTopic);
+                
+                // Check if user has selected a custom topic
+                const savedTopic = localStorage.getItem('selected_topic');
+                const savedCustomTopic = localStorage.getItem('custom_topic');
+                
+                if (savedTopic === 'custom' && savedCustomTopic) {
+                    this.currentTopic = savedCustomTopic;
+                    console.log('Using saved custom topic:', this.currentTopic);
+                } else if (savedTopic && savedTopic !== 'random' && savedTopic !== 'custom') {
+                    this.currentTopic = savedTopic;
+                    console.log('Using saved topic:', this.currentTopic);
+                } else {
+                    this.currentTopic = await this.backendService.getRandomTopic();
+                    console.log('Selected random conversation topic:', this.currentTopic);
+                }
+                
+                // Update the topic display in settings
+                this.updateTopicDisplay();
             } else {
                 console.warn('⚠️ Backend connection failed, using fallback messages');
                 this.useAI = false;
@@ -531,6 +547,14 @@ class KudumbAIshree {
 
     getCharacterDisplayName(characterId) {
         return this.personalityManager.getCharacterDisplayName(characterId);
+    }
+
+    // Update topic display in settings
+    updateTopicDisplay() {
+        const currentTopicSpan = document.getElementById('currentTopic');
+        if (currentTopicSpan && this.currentTopic) {
+            currentTopicSpan.textContent = this.currentTopic;
+        }
     }
 }
 

@@ -91,3 +91,10 @@
   - Test that conversation rotation progresses through Aliyamma, Mary, then Chakko
   - Ensure conversation reset maintains new character order
   - _Requirements: 4.1, 4.2, 4.3_
+
+- [ ] 9. Fix AI integration fallback issues
+  - Investigate why API calls are falling back to hardcoded messages instead of generating proper AI responses
+  - Check API key validity and quota limits in backend configuration
+  - Improve error handling and logging to better identify API failures
+  - Ensure proper message generation and reduce reliance on fallback responses
+  - _Requirements: All requirements depend on proper AI functionality_

@@ -242,6 +242,47 @@
           </div>
 
           <div class="setting-section">
+            <h3><i class="fas fa-lightbulb"></i> Conversation Topic</h3>
+            <div class="setting-item">
+              <label for="topicSelect">Choose Topic:</label>
+              <select id="topicSelect" class="setting-select">
+                <option value="random">🎲 Random Topic</option>
+                <option value="The best meal you've ever had">🍽️ The best meal you've ever had</option>
+                <option value="Childhood memories that still make you smile">😊 Childhood memories that still make you smile</option>
+                <option value="Your dream vacation destination">🏖️ Your dream vacation destination</option>
+                <option value="Your morning routine and how it affects your day">🌅 Your morning routine and how it affects your day</option>
+                <option value="What you do to relax after a stressful day">😌 What you do to relax after a stressful day</option>
+                <option value="Your favorite family tradition">👨‍👩‍👧‍👦 Your favorite family tradition</option>
+                <option value="The skill you wish you could master instantly">🎯 The skill you wish you could master instantly</option>
+                <option value="Your favorite comfort food and why">🍲 Your favorite comfort food and why</option>
+                <option value="What you hope people remember about you">💭 What you hope people remember about you</option>
+                <option value="Your favorite way to spend a weekend">🎉 Your favorite way to spend a weekend</option>
+                <option value="The most valuable lesson you've learned">📚 The most valuable lesson you've learned</option>
+                <option value="custom">✏️ Custom Topic</option>
+              </select>
+              <div class="setting-help">
+                <p>Select a conversation topic or choose custom to create your own</p>
+              </div>
+            </div>
+            <div class="setting-item" id="customTopicContainer" style="display: none;">
+              <label for="customTopic">Custom Topic:</label>
+              <input type="text" id="customTopic" class="setting-input" placeholder="Enter your custom conversation topic..." maxlength="100" />
+              <div class="setting-help">
+                <p>Enter any topic you'd like the characters to discuss</p>
+              </div>
+            </div>
+            <div class="setting-item">
+              <button id="changeTopic" class="btn btn-secondary">
+                <i class="fas fa-sync-alt"></i>
+                Change Topic Now
+              </button>
+              <div class="setting-help">
+                <p>Apply the new topic and restart the conversation</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-section">
             <h3><i class="fas fa-users"></i> Character Settings</h3>
             <div class="setting-item">
               <label for="characterOrder">Speaking Order:</label>
@@ -492,6 +533,103 @@
               alert(
                 "❌ Backend connection failed. Make sure Python backend is running on port 5000."
               );
+            }
+          });
+        }
+
+        // Add Topic Selection functionality
+        const topicSelect = document.getElementById("topicSelect");
+        const customTopicContainer = document.getElementById("customTopicContainer");
+        const customTopicInput = document.getElementById("customTopic");
+        const changeTopicBtn = document.getElementById("changeTopic");
+
+        if (topicSelect && customTopicContainer) {
+          // Show/hide custom topic input based on selection
+          topicSelect.addEventListener("change", () => {
+            if (topicSelect.value === "custom") {
+              customTopicContainer.style.display = "block";
+            } else {
+              customTopicContainer.style.display = "none";
+            }
+          });
+
+          // Load saved topic selection
+          const savedTopic = localStorage.getItem("selected_topic");
+          if (savedTopic) {
+            topicSelect.value = savedTopic;
+            if (savedTopic === "custom") {
+              customTopicContainer.style.display = "block";
+              const savedCustomTopic = localStorage.getItem("custom_topic");
+              if (savedCustomTopic && customTopicInput) {
+                customTopicInput.value = savedCustomTopic;
+              }
+            }
+          }
+        }
+
+        if (changeTopicBtn) {
+          changeTopicBtn.addEventListener("click", () => {
+            console.log("Change Topic clicked!");
+
+            try {
+              let selectedTopic = topicSelect.value;
+              let finalTopic = selectedTopic;
+
+              // Handle custom topic
+              if (selectedTopic === "custom") {
+                const customTopic = customTopicInput.value.trim();
+                if (!customTopic) {
+                  alert("Please enter a custom topic first!");
+                  return;
+                }
+                finalTopic = customTopic;
+                localStorage.setItem("custom_topic", customTopic);
+              } else if (selectedTopic === "random") {
+                // Get random topic from the available options
+                const topics = [
+                  "The best meal you've ever had",
+                  "Childhood memories that still make you smile",
+                  "Your dream vacation destination",
+                  "Your morning routine and how it affects your day",
+                  "What you do to relax after a stressful day",
+                  "Your favorite family tradition",
+                  "The skill you wish you could master instantly",
+                  "Your favorite comfort food and why",
+                  "What you hope people remember about you",
+                  "Your favorite way to spend a weekend",
+                  "The most valuable lesson you've learned"
+                ];
+                finalTopic = topics[Math.floor(Math.random() * topics.length)];
+              }
+
+              // Save topic selection
+              localStorage.setItem("selected_topic", selectedTopic);
+
+              // Update the main app if available
+              if (window.kudumbAIshree) {
+                window.kudumbAIshree.currentTopic = finalTopic;
+                console.log("Topic changed to:", finalTopic);
+
+                // Update the current topic display
+                const currentTopicSpan = document.getElementById("currentTopic");
+                if (currentTopicSpan) {
+                  currentTopicSpan.textContent = finalTopic;
+                }
+
+                // Reset and restart the conversation with new topic
+                window.kudumbAIshree.resetChat();
+                
+                alert(`✅ Topic changed to: "${finalTopic}"\n\nThe conversation has been reset. Click "Start Chat" to begin discussing the new topic!`);
+              } else {
+                alert(`✅ Topic changed to: "${finalTopic}"\n\nPlease start the chat to begin the conversation!`);
+              }
+
+              // Close modal
+              settingsModal.classList.remove("show");
+
+            } catch (error) {
+              console.error("Error changing topic:", error);
+              alert("Error changing topic: " + error.message);
             }
           });
         }
