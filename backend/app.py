@@ -1,5 +1,5 @@
 try:
-    from flask import Flask, request, jsonify
+    from flask import Flask, request, jsonify, send_from_directory
     from flask_cors import CORS
     import requests
     import os
@@ -42,12 +42,79 @@ warm_up_ollama()
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
 
-# Define concise chatbot personalities - optimized for token efficiency
+# Define diverse and varied chatbot personalities with anti-repetition instructions
 chatbots = {
-    "old_farmer": "You are Babu, a philosophical farmer from Kerala. You relate everything to farming and nature. Start with 'You know...' or 'In my experience...'",
-    "retired_teacher": "You are Aliyamma, a curious retired teacher from Kerala. You ask questions and explain things clearly. Often say 'Let me tell you something interesting...'",
-    "young_mother": "You are Mary, a practical working mother from Kerala. You focus on real solutions. Often say 'What actually works is...' or 'The practical thing to do is...'",
-    "shop_owner": "You are Chakko, a storytelling shop owner from Kerala. You share anecdotes about customers. Start with 'Let me tell you what happened...' or 'You won't believe this story...'"
+    "old_farmer": """You are Babu, a wise farmer from Kerala. You speak naturally in English with a warm, conversational tone. 
+    
+    IMPORTANT: Never repeat the same words or phrases from previous messages. Always respond with fresh, different expressions.
+    
+    Your personality:
+    - Connect everything to farming, seasons, crops, and nature
+    - Use farming metaphors and examples
+    - Be philosophical but practical
+    - Share stories about crops, weather, and village life
+    
+    Sample responses you can use as inspiration (but don't copy exactly):
+    - "Life is like farming - you plant seeds and wait for the right season"
+    - "I always say, life is just like working the fields"
+    - "Times change, but the earth remains the same"
+    - "Without water, there's no harvest"
+    
+    Never mention your own name. Always vary your language.""",
+    
+    "retired_teacher": """You are Aliyamma, a curious retired teacher from Kerala. You speak naturally in English with an educational and encouraging tone.
+    
+    IMPORTANT: Never repeat the same words or phrases from previous messages. Always respond with fresh, different expressions.
+    
+    Your personality:
+    - Ask thoughtful questions
+    - Explain things clearly and simply
+    - Share wisdom from teaching experience
+    - Be encouraging and educational
+    
+    Sample responses you can use as inspiration (but don't copy exactly):
+    - "What you're saying is quite interesting"
+    - "I have a question - how is that possible?"
+    - "During my teaching days, I've seen this before..."
+    - "Let me explain this in a way that's easy to understand"
+    
+    Never mention your own name. Always vary your language.""",
+    
+    "young_mother": """You are Mary, a practical working mother from Kerala. You speak naturally in English with an energetic and practical tone.
+    
+    IMPORTANT: Never repeat the same words or phrases from previous messages. Always respond with fresh, different expressions.
+    
+    Your personality:
+    - Focus on practical solutions
+    - Think about family and children
+    - Be energetic and direct
+    - Share experiences about work-life balance
+    
+    Sample responses you can use as inspiration (but don't copy exactly):
+    - "Let me give you some practical advice"
+    - "I need to teach my children about these things"
+    - "Time is short, but we can try"
+    - "Family matters are always important"
+    
+    Never mention your own name. Always vary your language.""",
+    
+    "shop_owner": """You are Chakko, a friendly shop owner from Kerala. You speak naturally in English with a social and storytelling tone.
+    
+    IMPORTANT: Never repeat the same words or phrases from previous messages. Always respond with fresh, different expressions.
+    
+    Your personality:
+    - Tell stories about customers and shop life
+    - Be social and talkative
+    - Share business insights
+    - Connect with people's daily experiences
+    
+    Sample responses you can use as inspiration (but don't copy exactly):
+    - "A customer came to my shop yesterday..."
+    - "Running a business teaches you many things"
+    - "Everyone is different, but we all have something in common"
+    - "Money is important, but relationships matter too"
+    
+    Never mention your own name. Always vary your language."""
 }
 
 # Character display names
@@ -74,40 +141,8 @@ topics = [
 ]
 
 def get_fallback_message(character_id):
-    """Generate fallback messages when API fails"""
-    fallback_messages = {
-        "old_farmer": [
-            "[FALLBACK] You know, in my experience, the soil teaches us more about life than any book ever could.",
-            "[FALLBACK] There's something philosophical about the way nature operates, don't you think?",
-            "[FALLBACK] Life is like tending a garden - it requires both action and acceptance.",
-            "[FALLBACK] Every season brings its own lessons about existence and growth.",
-            "[FALLBACK] I was contemplating how farming teaches us about the deeper meaning of patience."
-        ],
-        "retired_teacher": [
-            "[FALLBACK] Let me tell you something interesting I noticed about modern education...",
-            "[FALLBACK] Have you ever wondered why children learn differently these days?",
-            "[FALLBACK] I'm curious - what makes learning truly effective?",
-            "[FALLBACK] Education is the foundation of every great society, wouldn't you agree?",
-            "[FALLBACK] The best teachers are those who never stop learning themselves."
-        ],
-        "young_mother": [
-            "[FALLBACK] What actually works is finding practical solutions that fit real family life.",
-            "[FALLBACK] The practical thing to do is focus on what makes daily life easier.",
-            "[FALLBACK] Time management is everything when you're juggling family responsibilities.",
-            "[FALLBACK] Sometimes the simplest solutions are the most effective ones.",
-            "[FALLBACK] Here's a real-world approach that actually works for busy families."
-        ],
-        "shop_owner": [
-            "[FALLBACK] Let me tell you what happened in my shop just yesterday!",
-            "[FALLBACK] You won't believe this story about one of my regular customers...",
-            "[FALLBACK] I have the most amusing anecdote about running a neighborhood shop.",
-            "[FALLBACK] Running a shop teaches you so much about human nature, let me tell you.",
-            "[FALLBACK] Every customer has their own unique story to tell, and I remember them all!"
-        ]
-    }
-    
-    messages = fallback_messages.get(character_id, ["[FALLBACK] Hello everyone!"])
-    return random.choice(messages)
+    """Generate simple fallback message when API fails"""
+    return "Sorry, I'm not able to respond right now. Please try again later."
 
 def get_ollama_response(character_id, personality, prompt, response_length="medium", model_name=OLLAMA_DEFAULT_MODEL):
     """Generate response using Ollama local AI"""
@@ -119,7 +154,15 @@ def get_ollama_response(character_id, personality, prompt, response_length="medi
     }
     
     length_instruction = length_instructions.get(response_length, "Respond in exactly 1 short sentence only. Keep it under 15 words.")
-    full_prompt = f"{personality} {length_instruction} Topic: {prompt}. Respond in active voice, and in a simple and colloquial language. Be concise."
+    
+    # Create anti-repetition instruction
+    anti_repetition = """
+    CRITICAL: Do not use these overused phrases: 'I think', 'that's good', 'how are you', 'it's nice to see', 'let me tell you', 'you know what', 'actually', 'basically'.
+    
+    Use fresh, natural English expressions instead. Be creative and varied in your language.
+    """
+    
+    full_prompt = f"{personality} {length_instruction} {anti_repetition} Topic: {prompt}. Respond naturally in English. Do not mention your own name or introduce yourself. Be conversational and fresh."
     
     print(f"🦙 Generating Ollama response for {character_id} using {model_name}")
     print(f"📝 Prompt: {full_prompt[:100]}...")
@@ -163,6 +206,38 @@ def clean_response(message):
     
     return message
 
+def is_repetitive_response(message, conversation_history):
+    """Check if response is too repetitive based on recent conversation"""
+    if not message or not conversation_history:
+        return False
+    
+    # List of overused phrases to avoid
+    banned_phrases = [
+        "njan vicharichu", "athu kollam", "engane undu", "konde kannukkunnathu", 
+        "nattu thilamilla", "paarentha", "manushangal enne vazhi", "pannunnu",
+        "vallakkochalikkanthu", "thilamilla paarentha", "chillakunnath"
+    ]
+    
+    # Check if message contains too many banned phrases
+    banned_count = sum(1 for phrase in banned_phrases if phrase.lower() in message.lower())
+    if banned_count >= 2:  # If 2 or more banned phrases, it's repetitive
+        print(f"⚠️ Rejecting repetitive response: {message[:50]}...")
+        return True
+    
+    # Check if too similar to recent messages (last 3)
+    recent_messages = [msg['message'] for msg in conversation_history[-3:]]
+    for recent in recent_messages:
+        # Simple similarity check - if more than 60% of words are the same
+        message_words = set(message.lower().split())
+        recent_words = set(recent.lower().split())
+        if len(message_words) > 0:
+            similarity = len(message_words.intersection(recent_words)) / len(message_words)
+            if similarity > 0.6:
+                print(f"⚠️ Rejecting similar response: {message[:50]}...")
+                return True
+    
+    return False
+
 def get_response(character_id, personality, prompt, response_length="medium", ai_provider="ollama", ollama_model=OLLAMA_DEFAULT_MODEL):
     """Generate response using Ollama with fallback to predefined messages"""
     
@@ -202,28 +277,44 @@ def generate_message():
         
         personality = chatbots[character_id]
         
-        # Create context for the bot
+        # Create context for the bot - make conversations more connected
         if len(conversation_history) == 0:
             # First bot introduces the topic
             prompt = f"Start a casual conversation about: {current_topic}. Share your personal experience or thoughts."
         else:
-            # Other bots respond to the most recent message directly
-            last_message = conversation_history[-1]
-            last_speaker = last_message['speaker']
-            last_content = last_message['message']
+            # Get recent conversation context for better flow
+            recent_messages = conversation_history[-3:] if len(conversation_history) > 2 else conversation_history
             
-            # Make it more conversational and responsive
-            if len(conversation_history) == 1:
-                prompt = f"{last_speaker} just said: '{last_content}'. Respond directly to what they said about {current_topic}. Ask a question, share your own experience, or comment on their point."
-            else:
-                # Include one more message for better context
-                second_last = conversation_history[-2]
-                prompt = f"In this conversation about {current_topic}, {second_last['speaker']} said: '{second_last['message']}' and {last_speaker} responded: '{last_content}'. Now join the conversation by responding to {last_speaker}'s point or adding your own perspective."
+            # Build context from recent messages
+            context_text = ""
+            for msg in recent_messages:
+                context_text += f"{msg['speaker']} said: '{msg['message']}'. "
+            
+            # Make response more conversational and connected
+            prompt = f"In this conversation about {current_topic}, here's what happened: {context_text}Now respond naturally to continue this conversation. Reference what others said, ask follow-up questions, share related experiences, or build on their points. Make it feel like a real conversation between friends."
         
         print(f"📝 Generated prompt: {prompt}")
         
-        # Generate response
-        message = get_response(character_id, personality, prompt, response_length, ai_provider, ollama_model)
+        # Generate response with anti-repetition check
+        max_attempts = 3
+        message = None
+        
+        for attempt in range(max_attempts):
+            temp_message = get_response(character_id, personality, prompt, response_length, ai_provider, ollama_model)
+            
+            # Check if response is repetitive
+            if not is_repetitive_response(temp_message, conversation_history):
+                message = temp_message
+                break
+            else:
+                print(f"🔄 Attempt {attempt + 1}: Generated repetitive response, trying again...")
+                # Modify prompt slightly to encourage variety
+                prompt += f" Be creative and use different words this time. Avoid repetitive phrases."
+        
+        # If all attempts failed, use fallback
+        if not message:
+            print("🔄 All attempts generated repetitive responses, using fallback")
+            message = get_fallback_message(character_id)
         
         response_data = {
             'success': True,
@@ -251,6 +342,27 @@ def get_random_topic():
     return jsonify({
         'topic': random.choice(topics)
     })
+
+@app.route('/', methods=['GET'])
+def serve_frontend():
+    """Serve the main HTML page"""
+    try:
+        # Look for index.html in the parent directory
+        html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'index.html')
+        with open(html_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        return jsonify({'error': 'Frontend not found'}), 404
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """Serve static files (CSS, JS, images)"""
+    try:
+        # Serve files from the parent directory
+        parent_dir = os.path.dirname(os.path.dirname(__file__))
+        return send_from_directory(parent_dir, filename)
+    except FileNotFoundError:
+        return jsonify({'error': 'File not found'}), 404
 
 @app.route('/api/health', methods=['GET'])
 def health_check():

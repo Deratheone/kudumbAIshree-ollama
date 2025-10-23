@@ -25,6 +25,7 @@ class BackendAPIService {
     // Validate backend availability
     async validateBackend() {
         try {
+            console.log('🔍 Validating backend connection to:', `${BACKEND_CONFIG.API_URL}/health`);
             const response = await fetch(`${BACKEND_CONFIG.API_URL}/health`, {
                 method: 'GET',
                 headers: {
@@ -32,16 +33,22 @@ class BackendAPIService {
                 }
             });
             
+            console.log('🌐 Backend response status:', response.status);
+            
             if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Backend validation successful:', data);
                 this.isAvailable = true;
                 this.lastError = null;
                 return true;
             } else {
+                console.error('❌ Backend server not responding, status:', response.status);
                 this.lastError = 'Backend server not responding';
                 this.isAvailable = false;
                 return false;
             }
         } catch (error) {
+            console.error('💥 Backend connection error:', error);
             this.lastError = `Backend connection failed: ${error.message}`;
             this.isAvailable = false;
             return false;
@@ -69,9 +76,9 @@ class BackendAPIService {
                 ai_provider: aiProvider,
                 ollama_model: ollamaModel
             };
-            
+
             const response = await this.makeBackendRequest('/generate', requestData);
-            
+
             this.requestCount++;
             return {
                 success: true,
@@ -170,19 +177,19 @@ class CharacterPersonalityManager {
         this.characterProfiles = {
             old_farmer: {
                 name: "Babu",
-                personality: "You are Babu, a 65-year-old philosophical farmer from Kerala. You speak with the wisdom of someone who has worked the land for decades. You often relate everything back to farming, seasons, and nature's cycles. You use gentle metaphors about soil, seeds, and harvest. You're contemplative, speak slowly and thoughtfully, and often start sentences with 'You know...' or 'In my experience...' You believe life's greatest lessons come from observing nature. You're patient, wise, and see deeper meaning in simple things."
+                personality: "You are a 65-year-old philosophical farmer from Kerala. You speak with the wisdom of someone who has worked the land for decades. You often relate everything back to farming, seasons, and nature's cycles. You're contemplative, speak slowly and thoughtfully. You speak in Manglish (Malayalam using English characters). Use Malayalam words but write them in English letters like 'njan', 'athu', 'engane'. Be natural and conversational. Never mention your own name in conversations."
             },
             retired_teacher: {
                 name: "Aliyamma", 
-                personality: "You are Aliyamma, a 58-year-old retired Malayalam teacher who taught for 35 years. You're naturally curious and love to ask 'Why?' and 'How?' about everything. You explain things clearly and patiently, often saying 'Let me tell you something interesting...' You're well-read, quote old Malayalam sayings, and always try to turn conversations into learning moments. You're encouraging, intellectually curious, and believe every conversation is a chance to learn or teach something new. You often reference books, students, or educational experiences."
+                personality: "You are a 58-year-old retired Malayalam teacher who taught for 35 years. You're naturally curious and love to ask questions about everything. You explain things clearly and patiently. You speak in Manglish (Malayalam using English characters). Use Malayalam words but write them in English letters like 'njan', 'athu', 'engane'. Be natural and conversational. Never mention your own name in conversations."
             },
             young_mother: {
                 name: "Mary",
-                personality: "You are Mary, a 32-year-old working mother with two young children. You're practical, efficient, and always thinking about real-world solutions. You often say things like 'What actually works is...' or 'The practical thing to do is...' You're juggling work and family, so you value time management and simple solutions. You're direct, no-nonsense, and focus on what's useful and actionable. You often reference your children, household management, or work challenges. You're supportive but realistic about what's actually achievable."
+                personality: "You are a 32-year-old working mother with two young children. You're practical, efficient, and always thinking about real-world solutions. You speak in Manglish (Malayalam using English characters). Use Malayalam words but write them in English letters like 'njan', 'athu', 'engane'. Be natural and conversational. Never mention your own name in conversations."
             },
             shop_owner: {
                 name: "Chakko",
-                personality: "You are Chakko, a 45-year-old shop owner who has run a small general store for 20 years. You're a natural storyteller who loves sharing anecdotes about customers, local events, and community happenings. You often start with 'Let me tell you what happened...' or 'You won't believe this story...' You know everyone in the neighborhood and their stories. You're warm, sociable, and see life as a collection of interesting stories. You often reference funny customer interactions, local gossip (in a friendly way), or memorable incidents from your shop."
+                personality: "You are a 45-year-old shop owner who has run a small general store for 20 years. You're a natural storyteller who loves sharing anecdotes about customers, local events, and community happenings. You speak in Manglish (Malayalam using English characters). Use Malayalam words but write them in English letters like 'njan', 'athu', 'engane'. Be natural and conversational. Never mention your own name in conversations."
             }
         };
     }
@@ -395,10 +402,7 @@ class KudumbAIshree {
         this.chatInterval = null;
         this.currentTopic = null;
         
-        // Load settings from localStorage
-        this.loadSettings();
-        
-        // Initialize services
+        // Initialize services first
         this.backendService = new BackendAPIService();
         this.personalityManager = new CharacterPersonalityManager();
         this.contextManager = new ConversationContextManager();
@@ -410,34 +414,56 @@ class KudumbAIshree {
     }
 
     // Load settings from localStorage
-    loadSettings() {
+    async loadSettings() {
         this.chatSpeed = parseFloat(localStorage.getItem('chat_speed') || '3');
         this.responseLength = localStorage.getItem('response_length') || 'medium';
         this.enableAI = localStorage.getItem('enable_ai') !== 'false'; // Default to true
         this.aiProvider = localStorage.getItem('ai_provider') || 'ollama'; // Default to Ollama
         this.ollamaModel = localStorage.getItem('ollama_model') || 'llama3.2:3b'; // Default model
         
+        // Load topic settings
+        const savedTopic = localStorage.getItem('selected_topic');
+        const savedCustomTopic = localStorage.getItem('custom_topic');
+        console.log('🎯 Loading topic settings:', { savedTopic, savedCustomTopic });
+
+        if (savedTopic === 'custom' && savedCustomTopic) {
+            this.currentTopic = savedCustomTopic;
+            console.log('Using custom topic:', this.currentTopic);
+        } else if (savedTopic && savedTopic !== 'random' && savedTopic !== 'custom') {
+            this.currentTopic = savedTopic;
+            console.log('Using preset topic:', this.currentTopic);
+        } else if (this.useAI && this.backendService && this.backendService.isAvailable) {
+            // Only get random topic if backend is available
+            this.currentTopic = await this.backendService.getRandomTopic();
+            console.log('Using random topic:', this.currentTopic);
+        } else {
+            // Fallback if no backend
+            this.currentTopic = "General conversation";
+            console.log('Using fallback topic:', this.currentTopic);
+        }
+        
         console.log('Settings loaded:', {
             chatSpeed: this.chatSpeed,
             responseLength: this.responseLength,
             enableAI: this.enableAI,
             aiProvider: this.aiProvider,
-            ollamaModel: this.ollamaModel
+            ollamaModel: this.ollamaModel,
+            currentTopic: this.currentTopic
         });
     }
 
     // Reload settings (called when settings are saved)
-    reloadSettings() {
+    async reloadSettings() {
         console.log('Reloading settings...');
-        this.loadSettings();
+        await this.loadSettings();
         
-        // If chat is active, restart with new speed
+        // If chat is active, stop it and require manual restart
         if (this.isChatActive) {
-            console.log('Restarting chat with new settings');
+            console.log('Settings changed - stopping chat. User must click Start Chat to continue with new settings.');
             this.pauseChat();
-            setTimeout(() => {
-                this.startChat();
-            }, 500);
+            
+            // Show notification to user
+            this.showSettingsChangedNotification();
         }
     }
 
@@ -450,6 +476,7 @@ class KudumbAIshree {
         this.clearLogBtn = document.getElementById('clearLog');
         this.closeLogBtn = document.getElementById('closeLog');
         this.aiLoadingIndicator = document.getElementById('aiLoadingIndicator');
+        this.testBackendBtn = document.getElementById('testBackend');
         
         this.speechBubbles = {
             'old_farmer': document.getElementById('bubble-1'),
@@ -480,42 +507,59 @@ class KudumbAIshree {
         if (this.closeLogBtn) {
             this.closeLogBtn.addEventListener('click', () => this.hideConversationLog());
         }
+        if (this.testBackendBtn) {
+            this.testBackendBtn.addEventListener('click', () => this.testBackendConnection());
+        }
     }
 
     async initializeBackend() {
-        this.backendService.setAPIKey('backend-enabled');
+        console.log('🚀 Initializing backend connection...');
         
+        // Load settings first (non-topic settings)
+        this.chatSpeed = parseFloat(localStorage.getItem('chat_speed') || '3');
+        this.responseLength = localStorage.getItem('response_length') || 'medium';
+        this.enableAI = localStorage.getItem('enable_ai') !== 'false'; // Default to true
+        this.aiProvider = localStorage.getItem('ai_provider') || 'ollama'; // Default to Ollama
+        this.ollamaModel = localStorage.getItem('ollama_model') || 'llama3.2:3b'; // Default model
+        
+        console.log('🔧 Current settings:', {
+            enableAI: this.enableAI,
+            useAI: this.useAI,
+            aiProvider: this.aiProvider,
+            ollamaModel: this.ollamaModel
+        });
+        
+        this.backendService.setAPIKey('backend-enabled');
+
         try {
             const isAvailable = await this.backendService.validateBackend();
+            console.log('🔄 Backend validation result:', isAvailable);
+
             if (isAvailable) {
-                console.log('✅ Backend connection successful');
+                console.log('✅ Backend connection successful - enabling AI');
                 this.useAI = true;
-                
-                // Check if user has selected a custom topic
-                const savedTopic = localStorage.getItem('selected_topic');
-                const savedCustomTopic = localStorage.getItem('custom_topic');
-                
-                if (savedTopic === 'custom' && savedCustomTopic) {
-                    this.currentTopic = savedCustomTopic;
-                    console.log('Using saved custom topic:', this.currentTopic);
-                } else if (savedTopic && savedTopic !== 'random' && savedTopic !== 'custom') {
-                    this.currentTopic = savedTopic;
-                    console.log('Using saved topic:', this.currentTopic);
-                } else {
-                    this.currentTopic = await this.backendService.getRandomTopic();
-                    console.log('Selected random conversation topic:', this.currentTopic);
-                }
-                
+
+                // Load topic settings now that backend is available
+                await this.loadSettings();
+
                 // Update the topic display in settings
                 this.updateTopicDisplay();
             } else {
                 console.warn('⚠️ Backend connection failed, using fallback messages');
+                console.warn('⚠️ Backend error:', this.backendService.lastError);
                 this.useAI = false;
             }
         } catch (error) {
             console.error('❌ Backend connection error:', error);
             this.useAI = false;
         }
+
+        console.log('📊 Final initialization state:', {
+            useAI: this.useAI,
+            enableAI: this.enableAI,
+            backendAvailable: this.backendService.isAvailable,
+            currentTopic: this.currentTopic
+        });
     }
 
     async startChat() {
@@ -708,42 +752,9 @@ class KudumbAIshree {
     }
 
     generateFallbackMessage(character) {
-        const fallbackMessages = {
-            'old_farmer': [
-                "[FALLBACK] You know, in my experience, the soil teaches us more about life than any book ever could.",
-                "[FALLBACK] There's something philosophical about the way nature operates, don't you think?",
-                "[FALLBACK] Life is like tending a garden - it requires both action and acceptance.",
-                "[FALLBACK] Every season brings its own lessons about existence and growth.",
-                "[FALLBACK] I was contemplating how farming teaches us about the deeper meaning of patience."
-            ],
-            'retired_teacher': [
-                "[FALLBACK] Let me tell you something interesting I noticed about modern education...",
-                "[FALLBACK] Have you ever wondered why children learn differently these days?",
-                "[FALLBACK] I'm curious - what makes learning truly effective?",
-                "[FALLBACK] Education is the foundation of every great society, wouldn't you agree?",
-                "[FALLBACK] The best teachers are those who never stop learning themselves."
-            ],
-            'young_mother': [
-                "[FALLBACK] What actually works is finding practical solutions that fit real family life.",
-                "[FALLBACK] The practical thing to do is focus on what makes daily life easier.",
-                "[FALLBACK] Time management is everything when you're juggling family responsibilities.",
-                "[FALLBACK] Sometimes the simplest solutions are the most effective ones.",
-                "[FALLBACK] Here's a real-world approach that actually works for busy families."
-            ],
-            'shop_owner': [
-                "[FALLBACK] Let me tell you what happened in my shop just yesterday!",
-                "[FALLBACK] You won't believe this story about one of my regular customers...",
-                "[FALLBACK] I have the most amusing anecdote about running a neighborhood shop.",
-                "[FALLBACK] Running a shop teaches you so much about human nature, let me tell you.",
-                "[FALLBACK] Every customer has their own unique story to tell, and I remember them all!"
-            ]
-        };
-        
-        const messages = fallbackMessages[character] || ["[FALLBACK] Hello everyone!"];
-        return messages[Math.floor(Math.random() * messages.length)];
-    }
-
-    showMessage(character, message) {
+        // Simplified fallback - no pre-written conversations
+        return "Sorry, I'm not able to respond right now. Please try again later.";
+    }    showMessage(character, message) {
         // Safety check for empty messages
         if (!message || message.trim() === '') {
             console.warn(`Empty message for ${character}, using fallback`);
@@ -801,6 +812,76 @@ class KudumbAIshree {
         if (currentTopicSpan && this.currentTopic) {
             currentTopicSpan.textContent = this.currentTopic;
         }
+    }
+
+    // Test backend connection manually
+    async testBackendConnection() {
+        console.log('🧪 Manual backend test requested');
+        
+        // Update button state
+        if (this.testBackendBtn) {
+            this.testBackendBtn.disabled = true;
+            this.testBackendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+        }
+
+        try {
+            const isAvailable = await this.backendService.validateBackend();
+            
+            if (isAvailable) {
+                alert('✅ Backend connection successful!\n\nServer is running and responding properly.');
+                console.log('✅ Manual backend test: SUCCESS');
+                
+                // Re-initialize to update AI status
+                this.useAI = true;
+                this.updateTopicDisplay();
+            } else {
+                alert('❌ Backend connection failed!\n\nPlease check:\n• Backend server is running\n• Port 5000 is available\n• No firewall blocking connection');
+                console.log('❌ Manual backend test: FAILED');
+                this.useAI = false;
+            }
+        } catch (error) {
+            console.error('❌ Backend test error:', error);
+            alert('❌ Backend test error!\n\n' + error.message);
+            this.useAI = false;
+        } finally {
+            // Restore button state
+            if (this.testBackendBtn) {
+                this.testBackendBtn.disabled = false;
+                this.testBackendBtn.innerHTML = '<i class="fas fa-plug"></i> Test Backend';
+            }
+        }
+    }
+
+    // Show notification when settings change during active chat
+    showSettingsChangedNotification() {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'settings-changed-notification';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-cog"></i>
+                <span>Settings changed! Chat stopped.</span>
+                <small>Click "Start Chat" to begin with new settings</small>
+            </div>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Show notification
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        // Auto-hide after 4 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 4000);
     }
 }
 

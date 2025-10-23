@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KudumbAIshree - Kerala Sit-out Chat Experience</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="css/styles.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -62,7 +62,7 @@
           <!-- Background Image -->
           <div class="background-image">
             <img
-              src="WhatsApp Image 2025-07-30 at 10.34.41 PM.jpeg"
+              src="assets/background.jpeg"
               alt="Kerala Sit-out Scene"
               id="sceneImage"
             />
@@ -76,8 +76,7 @@
                 <div class="bubble-content">
                   <div class="speaker-name">Babu</div>
                   <div class="message-text">
-                    Life is like a river - it flows with purpose, even when we
-                    can't see the destination.
+                    <!-- AI messages will appear here -->
                   </div>
                 </div>
                 <div class="bubble-arrow"></div>
@@ -99,8 +98,7 @@
                 <div class="bubble-content">
                   <div class="speaker-name">Aliyamma</div>
                   <div class="message-text">
-                    Have you ever wondered why children learn differently these
-                    days?
+                    <!-- AI messages will appear here -->
                   </div>
                 </div>
                 <div class="bubble-arrow"></div>
@@ -122,8 +120,7 @@
                 <div class="bubble-content">
                   <div class="speaker-name">Mary</div>
                   <div class="message-text">
-                    I found a practical solution to manage household expenses
-                    better.
+                    <!-- AI messages will appear here -->
                   </div>
                 </div>
                 <div class="bubble-arrow"></div>
@@ -142,8 +139,7 @@
                 <div class="bubble-content">
                   <div class="speaker-name">Chakko</div>
                   <div class="message-text">
-                    Let me tell you an interesting story that happened in my
-                    shop yesterday!
+                    <!-- AI messages will appear here -->
                   </div>
                 </div>
                 <div class="bubble-arrow"></div>
@@ -179,14 +175,7 @@
               </div>
             </div>
             <div class="log-content" id="conversationLogContent">
-              <div class="log-entry">
-                <span class="timestamp">10:30 AM</span>
-                <span class="speaker">Babu:</span>
-                <span class="message"
-                  >Welcome to our sit-out! I was just contemplating how
-                  gatherings like this bring deeper meaning to our lives.</span
-                >
-              </div>
+              <!-- Conversation entries will be added here dynamically -->
             </div>
           </div>
         </div>
@@ -381,7 +370,7 @@
       </div>
     </div>
 
-    <script src="script-clean.js"></script>
+    <script src="js/app.js"></script>
 
     <!-- Clean Settings JavaScript - NO DUPLICATES -->
     <script>
@@ -554,10 +543,19 @@
 
             // Update main app if available
             if (window.kudumbAIshree) {
-              window.kudumbAIshree.reloadSettings();
+              const wasActive = window.kudumbAIshree.isChatActive;
+              (async () => {
+                await window.kudumbAIshree.reloadSettings();
+                
+                if (wasActive) {
+                  alert("✅ Settings saved!\n\n⚠️ Chat was stopped due to settings change.\nClick 'Start Chat' to continue with new settings.");
+                } else {
+                  alert("✅ Settings saved successfully!");
+                }
+              })();
+            } else {
+              alert("✅ Settings saved successfully!");
             }
-
-            alert("✅ Settings saved successfully!");
             settingsModal.classList.remove("show");
           });
         }
@@ -601,12 +599,22 @@
 
             // Update main app
             if (window.kudumbAIshree) {
+              const wasActive = window.kudumbAIshree.isChatActive;
               window.kudumbAIshree.currentTopic = finalTopic;
               if (currentTopicSpan) {
                 currentTopicSpan.textContent = finalTopic;
               }
-              window.kudumbAIshree.resetChat();
-              alert(`✅ Topic changed to: "${finalTopic}"\n\nConversation reset. Click "Start Chat" to begin!`);
+              
+              // Stop chat if it was active and call reloadSettings to trigger notification
+              if (wasActive) {
+                (async () => {
+                  await window.kudumbAIshree.reloadSettings();
+                  alert(`✅ Topic changed to: "${finalTopic}"\n\n⚠️ Chat stopped. Click "Start Chat" to begin with new topic!`);
+                })();
+              } else {
+                window.kudumbAIshree.updateTopicDisplay();
+                alert(`✅ Topic changed to: "${finalTopic}"`);
+              }
             } else {
               alert(`✅ Topic changed to: "${finalTopic}"`);
             }
@@ -642,6 +650,70 @@
                 backendStatus.className = "status-indicator error";
               }
               alert("❌ Backend connection failed. Make sure Python backend is running on port 5000.");
+            }
+          });
+        }
+
+        // Initialize test backend button
+        const testBackendButton = document.getElementById('testBackend');
+        if (testBackendButton) {
+          testBackendButton.addEventListener('click', async function() {
+            console.log('🧪 Manual backend test triggered');
+            
+            const backendStatus = document.querySelector('#backendStatus .status-indicator');
+            if (backendStatus) {
+              backendStatus.textContent = "Testing...";
+              backendStatus.className = "status-indicator checking";
+            }
+
+            try {
+              console.log('🔍 Testing backend connection...');
+              const response = await fetch("http://localhost:5000/api/health");
+              console.log('🌐 Response received:', response.status);
+              
+              if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Backend test successful:', data);
+                
+                if (backendStatus) {
+                  backendStatus.textContent = "Connected";
+                  backendStatus.className = "status-indicator success";
+                }
+                alert("✅ Backend connection successful! " + JSON.stringify(data));
+                
+                // Now test AI generation
+                console.log('🤖 Testing AI generation...');
+                const aiResponse = await fetch("http://localhost:5000/api/generate", {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    character: "old_farmer",
+                    conversation_history: [],
+                    current_topic: "family"
+                  })
+                });
+                
+                if (aiResponse.ok) {
+                  const aiData = await aiResponse.json();
+                  console.log('🎯 AI generation successful:', aiData);
+                  alert("🎯 AI generation successful! Message: " + aiData.message);
+                } else {
+                  console.error('❌ AI generation failed:', aiResponse.status);
+                  alert("❌ AI generation failed: " + aiResponse.status);
+                }
+                
+              } else {
+                throw new Error(`Backend returned ${response.status}`);
+              }
+            } catch (error) {
+              console.error('💥 Backend test failed:', error);
+              if (backendStatus) {
+                backendStatus.textContent = "Failed";
+                backendStatus.className = "status-indicator error";
+              }
+              alert("❌ Backend connection failed: " + error.message);
             }
           });
         }
