@@ -262,11 +262,18 @@ def generate_message():
         character_id = data.get('character')
         conversation_history = data.get('conversation_history', [])
         current_topic = data.get('current_topic')
-        response_length = data.get('response_length', 'medium')
+        response_length = data.get('response_length', 'short')  # Default to short
         ai_provider = data.get('ai_provider', 'ollama')  # Default to Ollama since it's the only supported provider
         ollama_model = data.get('ollama_model', OLLAMA_DEFAULT_MODEL)
         
-        print(f"👤 Character: {character_id}, Topic: {current_topic}, AI: {ai_provider}")
+        print(f"👤 Character: {character_id}, Topic: '{current_topic}', AI: {ai_provider}")
+        
+        # Check if topic is None or empty
+        if not current_topic:
+            print("⚠️ WARNING: No topic provided or topic is empty!")
+            current_topic = "general conversation"
+        else:
+            print(f"✅ Using topic: '{current_topic}'")
         
         if not character_id or character_id not in chatbots:
             print(f"❌ Invalid character ID: {character_id}")
@@ -291,7 +298,7 @@ def generate_message():
                 context_text += f"{msg['speaker']} said: '{msg['message']}'. "
             
             # Make response more conversational and connected
-            prompt = f"In this conversation about {current_topic}, here's what happened: {context_text}Now respond naturally to continue this conversation. Reference what others said, ask follow-up questions, share related experiences, or build on their points. Make it feel like a real conversation between friends."
+            prompt = f"In this conversation about '{current_topic}', here's what happened: {context_text}Now respond naturally to continue this conversation about '{current_topic}'. Reference what others said, ask follow-up questions, share related experiences about '{current_topic}', or build on their points. Keep the conversation focused on '{current_topic}'."
         
         print(f"📝 Generated prompt: {prompt}")
         

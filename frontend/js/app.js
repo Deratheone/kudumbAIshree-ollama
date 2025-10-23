@@ -416,7 +416,7 @@ class KudumbAIshree {
     // Load settings from localStorage
     async loadSettings() {
         this.chatSpeed = parseFloat(localStorage.getItem('chat_speed') || '3');
-        this.responseLength = localStorage.getItem('response_length') || 'medium';
+        this.responseLength = localStorage.getItem('response_length') || 'short'; // Default to short
         this.enableAI = localStorage.getItem('enable_ai') !== 'false'; // Default to true
         this.aiProvider = localStorage.getItem('ai_provider') || 'ollama'; // Default to Ollama
         this.ollamaModel = localStorage.getItem('ollama_model') || 'llama3.2:3b'; // Default model
@@ -428,21 +428,34 @@ class KudumbAIshree {
 
         if (savedTopic === 'custom' && savedCustomTopic) {
             this.currentTopic = savedCustomTopic;
-            console.log('Using custom topic:', this.currentTopic);
+            console.log('✏️ Using custom topic:', this.currentTopic);
         } else if (savedTopic && savedTopic !== 'random' && savedTopic !== 'custom') {
             this.currentTopic = savedTopic;
-            console.log('Using preset topic:', this.currentTopic);
-        } else if (this.useAI && this.backendService && this.backendService.isAvailable) {
-            // Only get random topic if backend is available
-            this.currentTopic = await this.backendService.getRandomTopic();
-            console.log('Using random topic:', this.currentTopic);
+            console.log('📌 Using preset topic:', this.currentTopic);
+        } else if (savedTopic === 'random') {
+            // Generate a new random topic
+            if (this.useAI && this.backendService && this.backendService.isAvailable) {
+                try {
+                    this.currentTopic = await this.backendService.getRandomTopic();
+                    console.log('🎲 Using random topic from backend:', this.currentTopic);
+                } catch (error) {
+                    console.warn('Failed to get random topic from backend, using fallback');
+                    this.currentTopic = this.getRandomFallbackTopic();
+                }
+            } else {
+                this.currentTopic = this.getRandomFallbackTopic();
+                console.log('🎲 Using fallback random topic:', this.currentTopic);
+            }
         } else {
-            // Fallback if no backend
+            // Default fallback
             this.currentTopic = "General conversation";
-            console.log('Using fallback topic:', this.currentTopic);
+            console.log('Using default topic:', this.currentTopic);
         }
         
-        console.log('Settings loaded:', {
+        // Update UI display if available
+        this.updateTopicDisplay();
+        
+        console.log('✅ Settings loaded:', {
             chatSpeed: this.chatSpeed,
             responseLength: this.responseLength,
             enableAI: this.enableAI,
@@ -452,19 +465,55 @@ class KudumbAIshree {
         });
     }
 
+    // Get a random fallback topic
+    getRandomFallbackTopic() {
+        const fallbackTopics = [
+            "The best meal you've ever had",
+            "Childhood memories that still make you smile",
+            "Your dream vacation destination",
+            "Your morning routine and how it affects your day",
+            "What you do to relax after a stressful day",
+            "Your favorite family tradition",
+            "The skill you wish you could master instantly",
+            "Your favorite comfort food and why",
+            "What you hope people remember about you",
+            "Your favorite way to spend a weekend",
+            "The most valuable lesson you've learned"
+        ];
+        return fallbackTopics[Math.floor(Math.random() * fallbackTopics.length)];
+    }
+
+    // Update topic display in UI
+    updateTopicDisplay() {
+        const currentTopicSpan = document.getElementById('currentTopic');
+        if (currentTopicSpan && this.currentTopic) {
+            currentTopicSpan.textContent = this.currentTopic;
+            console.log('🎯 Updated topic display:', this.currentTopic);
+        } else if (currentTopicSpan) {
+            currentTopicSpan.textContent = 'Not selected';
+            console.log('⚠️ Topic display updated to "Not selected" - no current topic');
+        } else {
+            console.warn('⚠️ Could not find currentTopic display element');
+        }
+    }
+
     // Reload settings (called when settings are saved)
     async reloadSettings() {
-        console.log('Reloading settings...');
-        await this.loadSettings();
+        console.log('🔄 Reloading settings...');
         
-        // If chat is active, stop it and require manual restart
+        // ALWAYS stop chat when settings change
         if (this.isChatActive) {
-            console.log('Settings changed - stopping chat. User must click Start Chat to continue with new settings.');
+            console.log('⏸️ Settings changed - stopping chat. User must click Start Chat to continue with new settings.');
             this.pauseChat();
             
             // Show notification to user
             this.showSettingsChangedNotification();
         }
+        
+        // Reload all settings including topic
+        await this.loadSettings();
+        
+        console.log('✅ Settings reloaded successfully');
     }
 
     initializeElements() {
@@ -568,7 +617,23 @@ class KudumbAIshree {
         // Ensure any previous interval is cleared
         this.pauseChat();
         
-        console.log('Starting chat with backend integration');
+        console.log('🚀 Starting chat with current topic:', this.currentTopic);
+        
+        // Ensure topic is loaded and valid
+        if (!this.currentTopic) {
+            console.warn('⚠️ No topic set, reloading settings...');
+            await this.loadSettings();
+        }
+        
+        console.log('✅ Chat starting with topic:', this.currentTopic);
+        console.log('📊 Chat settings:', {
+            currentTopic: this.currentTopic,
+            useAI: this.useAI,
+            enableAI: this.enableAI,
+            chatSpeed: this.chatSpeed,
+            responseLength: this.responseLength
+        });
+        
         this.isChatActive = true;
         this.startBtn.disabled = true;
         this.pauseBtn.disabled = false;
@@ -692,12 +757,16 @@ class KudumbAIshree {
     }
 
     async generateAIMessage(character) {
-        console.log('generateAIMessage called:', {
+        console.log('🤖 generateAIMessage called:', {
             character,
+            currentTopic: this.currentTopic,
             useAI: this.useAI,
             enableAI: this.enableAI,
             isAvailable: this.backendService.isAvailable
         });
+        
+        // Log the topic being sent
+        console.log(`📝 Current topic for ${character}: "${this.currentTopic}"`);
         
         if (!this.enableAI) {
             console.log('AI disabled in settings, using fallback message');
@@ -718,6 +787,8 @@ class KudumbAIshree {
         try {
             const profile = this.personalityManager.getCharacterProfile(character);
             const conversationContext = this.contextManager.getConversationContext();
+            
+            console.log(`🎯 Sending to backend - Character: ${character}, Topic: "${this.currentTopic}"`);
             
             const result = await this.backendService.generateCharacterMessage(
                 character, 

@@ -222,8 +222,8 @@
             <div class="setting-item">
               <label for="responseLength">Response Length:</label>
               <select id="responseLength" class="setting-select">
-                <option value="short">Short (1 sentence)</option>
-                <option value="medium" selected>Medium (1-2 sentences)</option>
+                <option value="short" selected>Short (1 sentence)</option>
+                <option value="medium">Medium (1-2 sentences)</option>
                 <option value="long">Long (2-3 sentences)</option>
               </select>
               <div class="setting-help">
@@ -424,7 +424,7 @@
           }
           
           // Load response length
-          const savedLength = localStorage.getItem("response_length") || "medium";
+          const savedLength = localStorage.getItem("response_length") || "short";
           if (responseLengthSelect) {
             responseLengthSelect.value = savedLength;
           }
@@ -577,44 +577,25 @@
               }
               finalTopic = customTopic;
               localStorage.setItem("custom_topic", customTopic);
-            } else if (selectedTopic === "random") {
-              const topics = [
-                "The best meal you've ever had",
-                "Childhood memories that still make you smile",
-                "Your dream vacation destination",
-                "Your morning routine and how it affects your day",
-                "What you do to relax after a stressful day",
-                "Your favorite family tradition",
-                "The skill you wish you could master instantly",
-                "Your favorite comfort food and why",
-                "What you hope people remember about you",
-                "Your favorite way to spend a weekend",
-                "The most valuable lesson you've learned"
-              ];
-              finalTopic = topics[Math.floor(Math.random() * topics.length)];
             }
 
-            // Save topic
+            // Save topic selection
             localStorage.setItem("selected_topic", selectedTopic);
 
-            // Update main app
+            // Update main app - ALWAYS call reloadSettings to ensure proper topic loading and chat stopping
             if (window.kudumbAIshree) {
               const wasActive = window.kudumbAIshree.isChatActive;
-              window.kudumbAIshree.currentTopic = finalTopic;
-              if (currentTopicSpan) {
-                currentTopicSpan.textContent = finalTopic;
-              }
               
-              // Stop chat if it was active and call reloadSettings to trigger notification
-              if (wasActive) {
-                (async () => {
-                  await window.kudumbAIshree.reloadSettings();
-                  alert(`✅ Topic changed to: "${finalTopic}"\n\n⚠️ Chat stopped. Click "Start Chat" to begin with new topic!`);
-                })();
-              } else {
-                window.kudumbAIshree.updateTopicDisplay();
-                alert(`✅ Topic changed to: "${finalTopic}"`);
-              }
+              (async () => {
+                // This will stop chat if active, reload all settings including topic, and show notification
+                await window.kudumbAIshree.reloadSettings();
+                
+                if (wasActive) {
+                  alert(`✅ Topic changed!\n\n⚠️ Chat stopped. Click "Start Chat" to begin with new topic: "${window.kudumbAIshree.currentTopic}"`);
+                } else {
+                  alert(`✅ Topic changed to: "${window.kudumbAIshree.currentTopic}"`);
+                }
+              })();
             } else {
               alert(`✅ Topic changed to: "${finalTopic}"`);
             }
