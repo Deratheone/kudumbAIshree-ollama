@@ -174,7 +174,7 @@ def get_ollama_response(character_id, personality, prompt, response_length="medi
             "stream": False
         }
         
-        response = requests.post(OLLAMA_API_URL, json=payload, timeout=15)
+        response = requests.post(OLLAMA_API_URL, json=payload, timeout=30)
         
         if response.status_code == 200:
             data = response.json()
@@ -211,27 +211,34 @@ def is_repetitive_response(message, conversation_history):
     if not message or not conversation_history:
         return False
     
-    # List of overused phrases to avoid
+    # List of overused phrases to avoid (pre-lowercased for efficiency)
     banned_phrases = [
         "njan vicharichu", "athu kollam", "engane undu", "konde kannukkunnathu", 
         "nattu thilamilla", "paarentha", "manushangal enne vazhi", "pannunnu",
         "vallakkochalikkanthu", "thilamilla paarentha", "chillakunnath"
     ]
     
+    # Convert message to lowercase once
+    message_lower = message.lower()
+    
     # Check if message contains too many banned phrases
-    banned_count = sum(1 for phrase in banned_phrases if phrase.lower() in message.lower())
+    banned_count = sum(1 for phrase in banned_phrases if phrase in message_lower)
     if banned_count >= 2:  # If 2 or more banned phrases, it's repetitive
         print(f"⚠️ Rejecting repetitive response: {message[:50]}...")
         return True
     
+    # Pre-compute message words set once
+    message_words = set(message_lower.split())
+    if not message_words:
+        return False
+    
     # Check if too similar to recent messages (last 3)
-    recent_messages = [msg['message'] for msg in conversation_history[-3:]]
-    for recent in recent_messages:
+    recent_messages = conversation_history[-3:] if len(conversation_history) > 3 else conversation_history
+    for msg in recent_messages:
         # Simple similarity check - if more than 60% of words are the same
-        message_words = set(message.lower().split())
-        recent_words = set(recent.lower().split())
-        if len(message_words) > 0:
-            similarity = len(message_words.intersection(recent_words)) / len(message_words)
+        recent_words = set(msg['message'].lower().split())
+        if recent_words:
+            similarity = len(message_words & recent_words) / len(message_words)
             if similarity > 0.6:
                 print(f"⚠️ Rejecting similar response: {message[:50]}...")
                 return True
@@ -289,13 +296,12 @@ def generate_message():
             # First bot introduces the topic
             prompt = f"Start a casual conversation about: {current_topic}. Share your personal experience or thoughts."
         else:
-            # Get recent conversation context for better flow
-            recent_messages = conversation_history[-3:] if len(conversation_history) > 2 else conversation_history
+            # Get recent conversation context for better flow (limit to last 3 messages)
+            recent_messages = conversation_history[-3:] if len(conversation_history) > 3 else conversation_history
             
-            # Build context from recent messages
-            context_text = ""
-            for msg in recent_messages:
-                context_text += f"{msg['speaker']} said: '{msg['message']}'. "
+            # Build context from recent messages using efficient list join
+            context_parts = [f"{msg['speaker']} said: '{msg['message']}'" for msg in recent_messages]
+            context_text = ". ".join(context_parts) + ". "
             
             # Make response more conversational and connected
             prompt = f"In this conversation about '{current_topic}', here's what happened: {context_text}Now respond naturally to continue this conversation about '{current_topic}'. Reference what others said, ask follow-up questions, share related experiences about '{current_topic}', or build on their points. Keep the conversation focused on '{current_topic}'."
@@ -305,9 +311,12 @@ def generate_message():
         # Generate response with anti-repetition check
         max_attempts = 3
         message = None
+        prompt_suffix = ""
         
         for attempt in range(max_attempts):
-            temp_message = get_response(character_id, personality, prompt, response_length, ai_provider, ollama_model)
+            # Build prompt with suffix to avoid repetition (only concatenate once per attempt)
+            full_prompt = f"{prompt}{prompt_suffix}"
+            temp_message = get_response(character_id, personality, full_prompt, response_length, ai_provider, ollama_model)
             
             # Check if response is repetitive
             if not is_repetitive_response(temp_message, conversation_history):
@@ -315,8 +324,8 @@ def generate_message():
                 break
             else:
                 print(f"🔄 Attempt {attempt + 1}: Generated repetitive response, trying again...")
-                # Modify prompt slightly to encourage variety
-                prompt += f" Be creative and use different words this time. Avoid repetitive phrases."
+                # Modify suffix for next attempt to encourage variety
+                prompt_suffix = f" Be creative and use different words this time. Avoid repetitive phrases."
         
         # If all attempts failed, use fallback
         if not message:

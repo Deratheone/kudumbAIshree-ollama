@@ -13,6 +13,12 @@ class BackendAPIService {
         this.isAvailable = false;
         this.lastError = null;
         this.requestCount = 0;
+        // Shared fallback topics to avoid duplication
+        this.fallbackTopics = [
+            "The best meal you've ever had",
+            "Childhood memories that still make you smile",
+            "Your dream vacation destination"
+        ];
     }
 
     // Set API key (for compatibility, but backend handles the key)
@@ -161,12 +167,7 @@ class BackendAPIService {
             }
         } catch (error) {
             console.warn('Failed to get topic from backend, using fallback');
-            const fallbackTopics = [
-                "The best meal you've ever had",
-                "Childhood memories that still make you smile",
-                "Your dream vacation destination"
-            ];
-            return fallbackTopics[Math.floor(Math.random() * fallbackTopics.length)];
+            return this.fallbackTopics[Math.floor(Math.random() * this.fallbackTopics.length)];
         }
     }
 }
@@ -276,21 +277,8 @@ class TopicManager {
             if (this.backendService && this.backendService.isAvailable) {
                 return await this.backendService.getRandomTopic();
             } else {
-                // Fallback random topics
-                const fallbackTopics = [
-                    "The best meal you've ever had",
-                    "Childhood memories that still make you smile",
-                    "Your dream vacation destination",
-                    "Your morning routine and how it affects your day",
-                    "What you do to relax after a stressful day",
-                    "Your favorite family tradition",
-                    "The skill you wish you could master instantly",
-                    "Your favorite comfort food and why",
-                    "What you hope people remember about you",
-                    "Your favorite way to spend a weekend",
-                    "The most valuable lesson you've learned"
-                ];
-                return fallbackTopics[Math.floor(Math.random() * fallbackTopics.length)];
+                // Use fallback topics from backend service
+                return this.backendService.fallbackTopics[Math.floor(Math.random() * this.backendService.fallbackTopics.length)];
             }
         } catch (error) {
             console.error('Error fetching random topic:', error);
@@ -370,6 +358,7 @@ class TopicManager {
 class ConversationContextManager {
     constructor() {
         this.conversationHistory = [];
+        this.maxHistorySize = 20;
     }
 
     addMessage(speaker, message) {
@@ -379,8 +368,9 @@ class ConversationContextManager {
             timestamp: new Date().toISOString()
         });
         
-        if (this.conversationHistory.length > 20) {
-            this.conversationHistory.shift();
+        // Efficient trimming: only when necessary
+        if (this.conversationHistory.length > this.maxHistorySize) {
+            this.conversationHistory = this.conversationHistory.slice(-this.maxHistorySize);
         }
     }
 
@@ -401,6 +391,21 @@ class KudumbAIshree {
         this.currentCharacterIndex = 0;
         this.chatInterval = null;
         this.currentTopic = null;
+        
+        // Fallback topics - defined once at construction
+        this.fallbackTopics = [
+            "The best meal you've ever had",
+            "Childhood memories that still make you smile",
+            "Your dream vacation destination",
+            "Your morning routine and how it affects your day",
+            "What you do to relax after a stressful day",
+            "Your favorite family tradition",
+            "The skill you wish you could master instantly",
+            "Your favorite comfort food and why",
+            "What you hope people remember about you",
+            "Your favorite way to spend a weekend",
+            "The most valuable lesson you've learned"
+        ];
         
         // Initialize services first
         this.backendService = new BackendAPIService();
@@ -467,20 +472,7 @@ class KudumbAIshree {
 
     // Get a random fallback topic
     getRandomFallbackTopic() {
-        const fallbackTopics = [
-            "The best meal you've ever had",
-            "Childhood memories that still make you smile",
-            "Your dream vacation destination",
-            "Your morning routine and how it affects your day",
-            "What you do to relax after a stressful day",
-            "Your favorite family tradition",
-            "The skill you wish you could master instantly",
-            "Your favorite comfort food and why",
-            "What you hope people remember about you",
-            "Your favorite way to spend a weekend",
-            "The most valuable lesson you've learned"
-        ];
-        return fallbackTopics[Math.floor(Math.random() * fallbackTopics.length)];
+        return this.fallbackTopics[Math.floor(Math.random() * this.fallbackTopics.length)];
     }
 
     // Update topic display in UI
@@ -832,23 +824,24 @@ class KudumbAIshree {
             message = this.generateFallbackMessage(character);
         }
 
-        // Clear all bubbles first
-        Object.values(this.speechBubbles).forEach(bubble => {
-            if (bubble) bubble.classList.remove('active');
-        });
-
-        // Show the new bubble
         const bubble = this.speechBubbles[character];
-        if (bubble) {
-            const messageText = bubble.querySelector('.message-text');
-            if (messageText) {
-                messageText.textContent = message;
-            }
+        if (!bubble) return;
 
-            setTimeout(() => {
-                bubble.classList.add('active');
-            }, 100);
-        }
+        const messageText = bubble.querySelector('.message-text');
+        if (!messageText) return;
+
+        // Batch DOM operations for better performance
+        // 1. First, hide all bubbles and update content
+        Object.values(this.speechBubbles).forEach(b => {
+            if (b) b.classList.remove('active');
+        });
+        
+        messageText.textContent = message;
+
+        // 2. Then show the new bubble after a small delay
+        setTimeout(() => {
+            bubble.classList.add('active');
+        }, 100);
     }
 
     addToConversationLog(speaker, message, source) {
